@@ -1,0 +1,159 @@
+<!doctype html>
+<html lang="tr"><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Makine Bakım Görevleri</title>
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
+<meta name="theme-color" content="#1f3864">
+<style>
+:root{--navy:#1f3864;--bg:#eef1f8;--tx:#1b2330;--mut:#667085;--red:#c00000}
+*{box-sizing:border-box}
+body{margin:0;font:16px/1.4 system-ui,sans-serif;background:var(--bg);color:var(--tx)}
+header{background:var(--navy);color:#fff;padding:calc(12px + env(safe-area-inset-top)) 16px 12px;display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;z-index:2}
+main,#login{max-width:640px;margin:0 auto;padding:16px}
+h1{color:var(--navy)}
+h2{font-size:16px;color:var(--navy);margin:22px 0 8px}
+input,select,textarea,button{font:inherit;width:100%;padding:12px;margin:0 0 10px;border:1px solid #c5cde0;border-radius:8px;background:#fff;color:var(--tx)}
+button{background:var(--navy);color:#fff;border:0;font-weight:600}
+button:disabled{opacity:.4}
+button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{outline:3px solid #f2c200;outline-offset:1px}
+.task{background:#fff;border-radius:8px;padding:12px;margin-bottom:10px;border-left:6px solid #94a3b8}
+.task.late{background:#fde8e8;border-color:var(--red)}
+.task.today{background:#fff6c2;border-color:#e0b000}
+.task.done{background:#e5f4e8;border-color:#2e9e4f}
+.meta{font-size:14px;color:var(--mut);margin-bottom:4px}
+.late .meta{color:var(--red);font-weight:600}
+.note{margin-top:6px;font-size:15px}
+.task button{width:auto;padding:8px 16px;margin:8px 8px 0 0}
+.task .del{background:#fff;color:var(--red);border:1px solid var(--red)}
+.mut{color:var(--mut)}
+dialog{border:0;border-radius:12px;width:min(92vw,420px);padding:16px}
+dialog .sec{background:#e5e7eb;color:var(--tx)}
+</style></head><body>
+
+<section id="login" hidden>
+  <h1>Makine Bakım Görevleri</h1>
+  <input id="name" placeholder="Adınız Soyadınız" autocomplete="name">
+  <select id="role"><option value="staff">Personel</option><option value="manager">Yönetici</option></select>
+  <input id="pin" type="password" placeholder="Yönetici PIN" hidden>
+  <button id="go">Başla</button>
+</section>
+
+<div id="app" hidden>
+  <header><b id="hi"></b><span>Makine Bakım</span></header>
+  <main>
+    <button id="bell" hidden>🔔 Bildirimleri aç</button>
+    <div id="mgr" hidden>
+      <h2>Yeni görev</h2>
+      <select id="who"></select>
+      <input id="date" type="date">
+      <textarea id="title" rows="3" placeholder="Görev açıklaması"></textarea>
+      <button id="add">Görevi gönder</button>
+    </div>
+    <h2>Açık görevler</h2><div id="open"></div>
+    <h2>Tamamlananlar</h2><div id="done"></div>
+  </main>
+</div>
+
+<dialog id="dlg">
+  <h3>Görev yapıldı</h3>
+  <textarea id="note" rows="4" placeholder="Ne yapıldı? Açıklama yazmak zorunlu"></textarea>
+  <button id="save" disabled>Kaydet</button>
+  <button id="cancel" class="sec">Vazgeç</button>
+</dialog>
+
+<script src="config.js"></script>
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getFirestore, collection, doc, setDoc, addDoc, updateDoc, deleteDoc, onSnapshot, query, where, arrayUnion, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import { getMessaging, getToken, isSupported } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-messaging.js";
+
+const app = initializeApp(CFG.firebase), db = getFirestore(app);
+const $ = s => document.querySelector(s);
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const today = () => new Date().toLocaleDateString("sv-SE");
+const fmt = d => d.split("-").reverse().join(".");
+let me = JSON.parse(localStorage.getItem("me") || "null"), users = [], tasks = [], doneId;
+
+$("#role").onchange = () => $("#pin").hidden = $("#role").value !== "manager";
+$("#go").onclick = async () => {
+  const name = $("#name").value.trim(), role = $("#role").value;
+  if (!name) return alert("Adınızı yazın.");
+  if (role === "manager" && $("#pin").value !== CFG.managerPin) return alert("PIN yanlış.");
+  me = { id: name.toLocaleLowerCase("tr").replace(/[^\p{L}\p{N}]+/gu, "-"), name, role };
+  localStorage.setItem("me", JSON.stringify(me));
+  await setDoc(doc(db, "users", me.id), { name, role }, { merge: true });
+  start();
+};
+
+async function enableNotifs(silent) {
+  try {
+    if (!(await isSupported())) throw new Error("Bu tarayıcı bildirimi desteklemiyor");
+    if (await Notification.requestPermission() !== "granted") throw new Error("İzin verilmedi");
+    const reg = await navigator.serviceWorker.register("firebase-messaging-sw.js");
+    await navigator.serviceWorker.ready;
+    const token = await getToken(getMessaging(app), { vapidKey: CFG.vapidKey, serviceWorkerRegistration: reg });
+    await setDoc(doc(db, "users", me.id), { tokens: arrayUnion(token) }, { merge: true });
+    $("#bell").hidden = true;
+  } catch (e) {
+    if (!silent) alert("Bildirim açılamadı: " + e.message + "\niPhone'da önce Paylaş > Ana Ekrana Ekle yapıp uygulamayı ana ekrandan açın.");
+  }
+}
+$("#bell").onclick = () => enableNotifs(false);
+
+function card(t) {
+  const open = t.status !== "done", late = open && t.date < today(), now = open && t.date === today();
+  return `<div class="task ${!open ? "done" : late ? "late" : now ? "today" : ""}">
+    <div class="meta">${me.role === "manager" ? `<b>${esc(t.assigneeName)}</b> · ` : ""}${fmt(t.date)}${late ? " · Gecikmiş" : now ? " · Bugün" : ""}</div>
+    <div>${esc(t.title)}</div>
+    ${!open ? `<div class="note">✔ ${esc(t.doneNote)}</div>` : me.id === t.assigneeId ? `<button data-done="${t.id}">Yapıldı</button>` : ""}
+    ${me.role === "manager" ? `<button class="del" data-del="${t.id}">Sil</button>` : ""}
+  </div>`;
+}
+function render() {
+  const list = me.role === "manager" ? tasks : tasks.filter(t => t.assigneeId === me.id);
+  const open = list.filter(t => t.status !== "done").sort((a, b) => a.date.localeCompare(b.date));
+  const done = list.filter(t => t.status === "done").sort((a, b) => (b.doneAt?.seconds || 0) - (a.doneAt?.seconds || 0));
+  $("#open").innerHTML = open.map(card).join("") || `<p class="mut">Açık görev yok.</p>`;
+  $("#done").innerHTML = done.map(card).join("") || `<p class="mut">Henüz tamamlanan yok.</p>`;
+}
+
+document.addEventListener("click", e => {
+  const d = e.target.dataset || {};
+  if (d.done) { doneId = d.done; $("#note").value = ""; $("#save").disabled = true; $("#dlg").showModal(); }
+  if (d.del && confirm("Görev silinsin mi?")) deleteDoc(doc(db, "tasks", d.del));
+});
+$("#note").oninput = e => $("#save").disabled = !e.target.value.trim();
+$("#cancel").onclick = () => $("#dlg").close();
+$("#save").onclick = async () => {
+  const note = $("#note").value.trim();
+  if (!note) return;
+  await updateDoc(doc(db, "tasks", doneId), { status: "done", doneNote: note, doneAt: serverTimestamp() });
+  $("#dlg").close();
+};
+
+$("#add").onclick = async () => {
+  const u = users.find(x => x.id === $("#who").value), title = $("#title").value.trim(), date = $("#date").value;
+  if (!u || !title || !date) return alert("Kişi, tarih ve görev açıklaması gerekli.");
+  await addDoc(collection(db, "tasks"), { title, date, assigneeId: u.id, assigneeName: u.name, status: "open", createdAt: serverTimestamp() });
+  $("#title").value = "";
+};
+
+function start() {
+  $("#login").hidden = true; $("#app").hidden = false;
+  $("#hi").textContent = me.name + (me.role === "manager" ? " (Yönetici)" : "");
+  $("#mgr").hidden = me.role !== "manager";
+  $("#date").value = today();
+  const q = me.role === "manager" ? collection(db, "tasks") : query(collection(db, "tasks"), where("assigneeId", "==", me.id));
+  onSnapshot(q, s => { tasks = s.docs.map(d => ({ id: d.id, ...d.data() })); render(); });
+  if (me.role === "manager") onSnapshot(collection(db, "users"), s => {
+    users = s.docs.map(d => ({ id: d.id, ...d.data() })).filter(u => u.role === "staff");
+    $("#who").innerHTML = users.map(u => `<option value="${u.id}">${esc(u.name)}</option>`).join("");
+  });
+  if ("Notification" in window && Notification.permission === "granted") enableNotifs(true);
+  else $("#bell").hidden = false;
+}
+if (me) start(); else $("#login").hidden = false;
+</script>
+</body></html>

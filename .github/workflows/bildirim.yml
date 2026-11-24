@@ -1,0 +1,32 @@
+name: Bildirimler
+
+on:
+  schedule:
+    - cron: "*/5 * * * *"   # her 5 dakikada bir (GitHub yoğunken birkaç dakika gecikebilir)
+  workflow_dispatch:         # Actions sekmesinden elle çalıştırmak için
+
+concurrency:
+  group: bildirim
+  cancel-in-progress: false
+
+jobs:
+  gonder:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: notifier
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: notifier/package-lock.json
+      - name: Hazırla
+        working-directory: notifier
+        run: npm ci --omit=dev --no-audit --no-fund
+      - name: Bildirimleri gönder
+        working-directory: notifier
+        env:
+          FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+        run: node run.js

@@ -613,6 +613,7 @@ function notifState() {
   if (Notification.permission === "granted") { $("#bell").hidden = true; return enableNotifs(true); }
   if (Notification.permission === "denied") return show("Bildirimler engellendi", "Telefon ayarlarından bu uygulamaya bildirim izni verin.", false);
   show("Bildirimler kapalı", "Yeni görev gelince telefonuna haber verelim.", true);
+  $("#bellBtn").textContent = "Aç";
 }
 async function enableNotifs(silent) {
   try {
@@ -628,7 +629,14 @@ async function enableNotifs(silent) {
     $("#bell").hidden = true;
     if (!silent) toast("Bildirimler açıldı.");
   } catch (e) {
-    if (!silent) { toast("Bildirim açılamadı: " + e.message, true); notifState(); }
+    console.error("Bildirim kurulamadı", e);
+    const msg = /Missing or insufficient permissions/i.test(e.message) ? "Hesap kaydına yazılamadı. Çıkış yapıp tekrar giriş yap."
+      : /vapid|applicationServerKey|invalid.*key/i.test(e.message) ? "Bildirim anahtarı (vapidKey) hatalı. Yöneticiye haber ver."
+      : /push service|AbortError|Registration failed/i.test(e.message) ? "Telefonun bildirim servisine ulaşılamadı. İnterneti ve Google Play Hizmetleri’ni kontrol edip tekrar dene."
+      : e.message;
+    $("#bell").hidden = false; $("#bellBtn").hidden = false; $("#bellBtn").textContent = "Tekrar dene";
+    $("#bellT").textContent = "Bildirimler kurulamadı"; $("#bellD").textContent = msg;
+    if (!silent) toast("Bildirim açılamadı: " + msg, true);
   }
 }
 $("#bellBtn").onclick = () => enableNotifs(false);

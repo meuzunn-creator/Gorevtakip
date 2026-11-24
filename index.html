@@ -105,14 +105,21 @@ body.mgr main{padding-bottom:calc(104px + env(safe-area-inset-bottom))}
 .acts{display:flex;gap:8px;align-items:center;margin-top:12px}
 .acts:empty{display:none}
 .acts .btn{min-height:50px;font-size:17px}
-.del{border:0;background:transparent;color:var(--red);font-weight:600;padding:10px 6px;margin-left:auto;flex:none}
+.mg{display:flex;gap:4px;margin-left:auto;flex:none}
+.lnk,.del{border:0;background:transparent;font-weight:600;padding:10px 8px;min-height:44px}
+.lnk{color:var(--ink)}
+.del{color:var(--red)}
+.btn.sec{background:var(--surface);color:var(--ink);border:1px solid var(--line)}
+.dock-in{max-width:608px;margin:0 auto;display:grid;grid-template-columns:1fr 2fr;gap:10px}
+.person{display:flex;align-items:center;gap:10px;padding:12px 0;border-bottom:1px solid var(--line)}
+.person div{flex:1;min-width:0;font-weight:600;overflow-wrap:anywhere}
+.person small{display:block;color:var(--mut);font-weight:400;font-size:14px}
 
 .empty{text-align:center;padding:36px 16px;color:var(--mut)}
 .empty b{display:block;color:var(--ink);font:700 22px/1.2 var(--cond);margin-bottom:4px}
 
 .dock{position:fixed;left:0;right:0;bottom:0;z-index:4;background:var(--bg);border-top:1px solid var(--line);
   padding:12px 16px calc(12px + env(safe-area-inset-bottom))}
-.dock .btn{max-width:608px;margin:0 auto}
 
 dialog{border:0;padding:0;margin:auto auto 0;width:100%;max-width:560px;max-height:92vh;border-radius:18px 18px 0 0;background:var(--surface);color:var(--ink)}
 dialog::backdrop{background:rgba(10,18,32,.55)}
@@ -181,14 +188,14 @@ textarea.inp{resize:vertical;min-height:110px}
     </div>
     <div id="list"></div>
   </main>
-  <div class="dock" id="dock" hidden><button id="newBtn" class="btn primary">+ Yeni görev</button></div>
+  <div class="dock" id="dock" hidden><div class="dock-in"><button id="peopleBtn" class="btn sec">Personel</button><button id="newBtn" class="btn primary">+ Yeni görev</button></div></div>
 </div>
 
 <dialog id="dlgNew">
   <div class="sheet">
     <div class="grip"></div>
-    <h3>Yeni görev</h3>
-    <p class="lead">Seçtiğin kişiye hemen bildirim gider.</p>
+    <h3 id="newH">Yeni görev</h3>
+    <p class="lead" id="newLead">Seçtiğin kişiye hemen bildirim gider.</p>
     <label class="f">Kime</label>
     <div class="chips" id="whoChips"></div>
     <label class="f">Ne zaman</label>
@@ -217,12 +224,22 @@ textarea.inp{resize:vertical;min-height:110px}
   </div>
 </dialog>
 
+<dialog id="dlgPeople">
+  <div class="sheet">
+    <div class="grip"></div>
+    <h3>Personel</h3>
+    <p class="lead">Silinen kişinin açık görevleri de silinir, tamamlananlar kayıtta kalır. Kişi tekrar giriş yaparsa listeye geri gelir.</p>
+    <div id="people"></div>
+    <button class="btn ghost" data-close>Kapat</button>
+  </div>
+</dialog>
+
 <div id="toast" role="status" hidden></div>
 
 <script src="config.js"></script>
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import { getFirestore, collection, doc, setDoc, addDoc, updateDoc, deleteDoc, onSnapshot, query, where, arrayUnion, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import { getFirestore, collection, doc, setDoc, addDoc, updateDoc, deleteDoc, onSnapshot, query, where, arrayUnion, serverTimestamp, writeBatch } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 import { getMessaging, getToken, isSupported } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-messaging.js";
 
 const app = initializeApp(CFG.firebase), db = getFirestore(app);
@@ -238,7 +255,7 @@ const diff = (a, b) => Math.round((parse(a) - parse(b)) / 864e5);
 const fmtTs = ts => new Date(ts.seconds * 1000).toLocaleString("tr-TR", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" });
 
 let me = JSON.parse(localStorage.getItem("me") || "null"), users = [], tasks = [];
-let role = "staff", tab = "open", doneId = null, pickWho = null, pickDate = null, started = false;
+let role = "staff", tab = "open", doneId = null, pickWho = null, pickDate = null, started = false, editId = null;
 
 function toast(msg, bad) {
   const t = $("#toast"); t.textContent = msg; t.className = bad ? "bad" : ""; t.hidden = false;
@@ -299,7 +316,7 @@ function when(t) {
 function card(t) {
   const w = when(t), d = parse(t.date), mgr = me.role === "manager";
   const acts = (t.status !== "done" && me.id === t.assigneeId ? `<button class="btn ok" data-done="${esc(t.id)}">✓ Yapıldı</button>` : "")
-             + (mgr ? `<button class="del" data-del="${esc(t.id)}">Sil</button>` : "");
+             + (mgr ? `<span class="mg">${t.status !== "done" ? `<button class="lnk" data-edit="${esc(t.id)}">Düzenle</button>` : ""}<button class="del" data-del="${esc(t.id)}">Sil</button></span>` : "");
   return `<article class="task ${w.cls}">
     <div class="day"><b>${d.getDate()}</b><span>${MONTHS[d.getMonth()]}</span></div>
     <div class="body">
@@ -345,6 +362,10 @@ document.addEventListener("click", async e => {
   if (del && confirm("Bu görev silinsin mi?")) {
     try { await deleteDoc(doc(db, "tasks", del.dataset.del)); toast("Görev silindi."); } catch (err) { showErr(err); }
   }
+  const ed = e.target.closest("[data-edit]");
+  if (ed) openTask(tasks.find(x => x.id === ed.dataset.edit));
+  const du = e.target.closest("[data-deluser]");
+  if (du) deleteUser(users.find(x => x.id === du.dataset.deluser));
   if (e.target.closest("[data-close]")) e.target.closest("dialog").close();
 });
 $$("dialog").forEach(d => d.addEventListener("click", e => { if (e.target === d) d.close(); }));
@@ -375,11 +396,23 @@ function setDate(key) {
 $("#whoChips").onclick = e => { const c = e.target.closest("[data-who]"); if (c) { pickWho = c.dataset.who; drawWho(); } };
 $("#dateChips").onclick = e => { const c = e.target.closest("[data-d]"); if (c) setDate(c.dataset.d); };
 $("#date").onchange = e => pickDate = e.target.value || null;
-$("#newBtn").onclick = () => {
-  if (!users.some(u => u.id === pickWho)) pickWho = users.length === 1 ? users[0].id : null;
-  drawWho(); setDate("0"); $("#title").value = "";
-  $("#dlgNew").showModal();
-};
+function openTask(t) {
+  editId = t ? t.id : null;
+  $("#newH").textContent = t ? "Görevi düzenle" : "Yeni görev";
+  $("#newLead").textContent = t ? "Kişi, tarih veya açıklamayı değiştirebilirsin." : "Seçtiğin kişiye hemen bildirim gider.";
+  $("#add").textContent = t ? "Değişiklikleri kaydet" : "Görevi gönder";
+  if (t) {
+    pickWho = t.assigneeId; $("#title").value = t.title;
+    if (t.date === addDays(0)) setDate("0");
+    else if (t.date === addDays(1)) setDate("1");
+    else { $("#date").value = t.date; setDate("pick"); }
+  } else {
+    if (!users.some(u => u.id === pickWho)) pickWho = users.length === 1 ? users[0].id : null;
+    setDate("0"); $("#title").value = "";
+  }
+  drawWho(); $("#dlgNew").showModal();
+}
+$("#newBtn").onclick = () => openTask(null);
 $("#add").onclick = async () => {
   const u = users.find(x => x.id === pickWho), title = $("#title").value.trim();
   if (!u) return toast("Görevin kime verileceğini seç.", true);
@@ -387,11 +420,39 @@ $("#add").onclick = async () => {
   if (!title) return toast("Görevi yaz.", true);
   $("#add").disabled = true;
   try {
-    await addDoc(collection(db, "tasks"), { title, date: pickDate, assigneeId: u.id, assigneeName: u.name, status: "open", createdAt: serverTimestamp() });
-    $("#dlgNew").close(); toast(`Görev gönderildi: ${u.name}`);
+    const data = { title, date: pickDate, assigneeId: u.id, assigneeName: u.name };
+    if (editId) {
+      await updateDoc(doc(db, "tasks", editId), data);
+      $("#dlgNew").close(); toast("Görev güncellendi.");
+    } else {
+      await addDoc(collection(db, "tasks"), { ...data, status: "open", createdAt: serverTimestamp() });
+      $("#dlgNew").close(); toast(`Görev gönderildi: ${u.name}`);
+    }
   } catch (e) { showErr(e); }
   $("#add").disabled = false;
 };
+
+/* Personel yönetimi */
+function drawPeople() {
+  $("#people").innerHTML = users.length ? users.map(u => {
+    const n = tasks.filter(t => t.assigneeId === u.id && t.status !== "done").length;
+    return `<div class="person"><div>${esc(u.name)}<small>${n ? n + " açık görev" : "Açık görevi yok"}</small></div>
+      <button class="del" data-deluser="${esc(u.id)}">Sil</button></div>`;
+  }).join("") : `<p class="none">Kayıtlı personel yok.</p>`;
+}
+$("#peopleBtn").onclick = () => { drawPeople(); $("#dlgPeople").showModal(); };
+async function deleteUser(u) {
+  if (!u) return;
+  const open = tasks.filter(t => t.assigneeId === u.id && t.status !== "done");
+  if (!confirm(`${u.name} silinsin mi?` + (open.length ? `\n${open.length} açık görevi de silinecek.` : ""))) return;
+  try {
+    const b = writeBatch(db);
+    b.delete(doc(db, "users", u.id));
+    open.forEach(t => b.delete(doc(db, "tasks", t.id)));
+    await b.commit();
+    toast(`${u.name} silindi.`);
+  } catch (e) { showErr(e); }
+}
 
 /* Başlat */
 function start() {
@@ -407,7 +468,11 @@ function start() {
     users = s.docs.map(d => ({ id: d.id, ...d.data() })).filter(u => u.role !== "manager")
       .sort((a, b) => (a.name || "").localeCompare(b.name || "", "tr"));
     if ($("#dlgNew").open) drawWho();
+    if ($("#dlgPeople").open) drawPeople();
   }, showErr);
+  onSnapshot(doc(db, "users", me.id), s => {
+    if (!s.exists() && !s.metadata.fromCache) { localStorage.removeItem("me"); location.reload(); }
+  });
   if ("Notification" in window && Notification.permission === "granted") enableNotifs(true);
   else $("#bell").hidden = false;
   render();

@@ -3,9 +3,13 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>Makine Bakım Görevleri</title>
+<meta name="description" content="Makine bakım ekibinin görev takip uygulaması">
 <link rel="manifest" href="manifest.json">
+<link rel="icon" href="icons/icon-192.png">
 <link rel="apple-touch-icon" href="icons/icon-192.png">
 <meta name="theme-color" content="#1f3864">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700&family=Barlow+Condensed:wght@600;700&display=swap" rel="stylesheet">
@@ -13,22 +17,23 @@
 :root{
   --navy:#1f3864;--yellow:#f2c200;--yellow-ink:#1f2a12;
   --bg:#e8ecf2;--surface:#fff;--ink:#18212f;--mut:#5b6678;--line:#d4dae4;
-  --red:#c62828;--green:#2e7d4f;--green-bg:#e6f3ea;--tint:#e3e9f4;
+  --red:#c62828;--red-bg:#fdecec;--green:#2e7d4f;--green-bg:#e6f3ea;--amber:#b45309;--amber-bg:#fdf0e1;--tint:#e3e9f4;--accent:#1f3864;
   --font:"Barlow",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
   --cond:"Barlow Condensed","Arial Narrow",system-ui,sans-serif;
   color-scheme:light;
 }
 @media (prefers-color-scheme:dark){:root{
   --bg:#0f1622;--surface:#182233;--ink:#e6ebf2;--mut:#9aa6b8;--line:#2a3649;
-  --green-bg:#183026;--tint:#22304a;color-scheme:dark;
+  --red-bg:#3a1d22;--green-bg:#183026;--amber-bg:#3a2a17;--tint:#22304a;--accent:#f2c200;color-scheme:dark;
 }}
 *{box-sizing:border-box}
 html,body{margin:0}
 body{font:17px/1.45 var(--font);background:var(--bg);color:var(--ink);-webkit-tap-highlight-color:transparent}
-button,input,textarea{font:inherit;color:inherit}
+button,input,textarea,select{font:inherit;color:inherit}
 button{cursor:pointer}
 :focus-visible{outline:3px solid var(--yellow);outline-offset:2px}
 [hidden]{display:none!important}
+.mut{color:var(--mut)}
 
 /* Giriş */
 #login{min-height:100vh;background:var(--navy);color:#fff;display:flex;align-items:center;justify-content:center;
@@ -39,21 +44,24 @@ button{cursor:pointer}
 #login h1{font:700 40px/1 var(--cond);margin:0 0 6px}
 #login .sub{margin:0 0 32px;color:#c3cde0}
 label.f{display:block;font-weight:600;margin:0 0 6px}
-.inp{width:100%;padding:14px;border-radius:10px;border:1px solid var(--line);background:var(--surface);color:var(--ink);margin:0 0 18px;min-height:52px}
-#login .inp{border:0}
+.inp{width:100%;padding:13px 14px;border-radius:10px;border:1px solid var(--line);background:var(--surface);color:var(--ink);margin:0 0 16px;min-height:50px}
+#login .inp{border:0;background:#fff;color:#18212f}
 .seg{display:grid;grid-template-columns:1fr 1fr;gap:6px;background:rgba(255,255,255,.1);padding:5px;border-radius:12px;margin:0 0 18px}
 .seg button{border:0;background:transparent;color:#fff;padding:12px;border-radius:9px;font-weight:600;min-height:48px}
 .seg button[aria-pressed="true"]{background:#fff;color:var(--navy)}
 .hint{font-size:15px;color:#c3cde0;margin:14px 0 0}
-.btn{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;min-height:54px;border:0;border-radius:12px;font-weight:700;font-size:18px;padding:12px 18px}
+.btn{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;min-height:52px;border:0;border-radius:12px;font-weight:700;font-size:17px;padding:12px 16px}
 .btn.primary{background:var(--yellow);color:var(--yellow-ink)}
 .btn.navy{background:var(--navy);color:#fff}
 .btn.ok{background:var(--green);color:#fff}
+.btn.sec{background:var(--surface);color:var(--ink);border:1px solid var(--line)}
 .btn.ghost{background:transparent;color:var(--mut);font-weight:600}
-.btn:disabled{opacity:.4}
+.btn:disabled{opacity:.45}
+.lnk{border:0;background:transparent;color:var(--ink);font-weight:600;padding:10px 8px;min-height:44px;font-size:15px}
+.lnk.danger{color:var(--red)}
 
 /* Üst bölüm */
-header{background:var(--navy);color:#fff;padding:env(safe-area-inset-top) 0 0;position:sticky;top:0;z-index:5}
+header{background:var(--navy);color:#fff;padding-top:env(safe-area-inset-top);position:sticky;top:0;z-index:5}
 .bar{max-width:640px;margin:0 auto;display:flex;align-items:center;gap:12px;padding:12px 16px}
 .bar .mark{width:34px;height:34px;border-radius:9px;margin:0;flex:none}
 .bar .mark svg{width:20px;height:20px}
@@ -61,24 +69,29 @@ header{background:var(--navy);color:#fff;padding:env(safe-area-inset-top) 0 0;po
 .bar .t b{display:block;font:700 21px/1.1 var(--cond)}
 .bar .t span{font-size:14px;color:#c3cde0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:block}
 #out{background:#fff;border:0;color:var(--navy);border-radius:10px;padding:8px 16px;font-weight:700;font-size:15px;min-height:42px;flex:none}
-.stats{max-width:640px;margin:0 auto;display:grid;grid-template-columns:repeat(3,1fr);gap:8px;padding:0 16px 14px}
-.stat{background:rgba(255,255,255,.08);border-radius:10px;padding:8px 12px}
-.stat b{display:block;font:700 30px/1 var(--cond)}
-.stat span{font-size:14px;color:#c3cde0;display:flex;align-items:center;gap:6px}
-.stat i{width:9px;height:9px;border-radius:50%;display:inline-block}
+.stats{max-width:640px;margin:0 auto;display:grid;grid-template-columns:repeat(4,1fr);gap:6px;padding:0 16px 14px}
+.stat{background:rgba(255,255,255,.08);border-radius:10px;padding:7px 10px;min-width:0}
+.stat b{display:block;font:700 28px/1 var(--cond)}
+.stat span{font-size:13px;color:#c3cde0;display:flex;align-items:center;gap:5px;white-space:nowrap}
+.stat i{width:8px;height:8px;border-radius:50%;display:inline-block;flex:none}
 
-main{max-width:640px;margin:0 auto;padding:16px 16px calc(24px + env(safe-area-inset-bottom))}
-body.mgr main{padding-bottom:calc(104px + env(safe-area-inset-bottom))}
+main{max-width:640px;margin:0 auto;padding:16px 16px calc(28px + env(safe-area-inset-bottom))}
+body.mgr main{padding-bottom:calc(150px + env(safe-area-inset-bottom))}
+.vh{font:700 28px/1.1 var(--cond);margin:4px 0 6px}
+.vlead{margin:0 0 16px;color:var(--mut);font-size:15px}
 
-.notice{display:flex;gap:12px;align-items:center;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:12px 14px;margin-bottom:16px}
+.notice{display:flex;gap:12px;align-items:center;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:12px 14px;margin-bottom:14px}
 .notice p{margin:0;flex:1;font-size:15px;color:var(--mut)}
 .notice p b{display:block;color:var(--ink);font-size:16px}
-.notice button{flex:none;border:0;background:var(--navy);color:#fff;border-radius:10px;padding:10px 14px;font-weight:600}
+.notice button{flex:none;border:0;background:var(--navy);color:#fff;border-radius:10px;padding:10px 16px;font-weight:600}
 
-.tabs{display:grid;grid-template-columns:1fr 1fr;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:4px;margin-bottom:14px}
-.tabs button{border:0;background:transparent;padding:11px;border-radius:9px;font-weight:600;color:var(--mut);min-height:46px}
+.tabs{display:grid;grid-template-columns:repeat(3,1fr);background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:4px;margin-bottom:12px}
+.tabs button{border:0;background:transparent;padding:10px 4px;border-radius:9px;font-weight:600;color:var(--mut);min-height:46px;font-size:16px}
 .tabs button[aria-selected="true"]{background:var(--navy);color:#fff}
-.tabs em{font-style:normal;opacity:.75;margin-left:4px}
+.tabs em{font-style:normal;opacity:.8;margin-left:4px}
+.filter{display:flex;gap:8px;overflow-x:auto;padding:2px 2px 10px;margin:0 -2px 4px;scrollbar-width:none}
+.filter::-webkit-scrollbar{display:none}
+.filter .chip{flex:none}
 
 /* Görev kartı: solda iş emri tarih damgası */
 .task{display:grid;grid-template-columns:66px 1fr;background:var(--surface);border:1px solid var(--line);border-radius:12px;overflow:hidden;margin-bottom:10px}
@@ -86,41 +99,81 @@ body.mgr main{padding-bottom:calc(104px + env(safe-area-inset-bottom))}
 @media (prefers-color-scheme:dark){.day{color:#c9d5ee}}
 .day b{font:700 32px/1 var(--cond)}
 .day span{font:600 15px/1.2 var(--cond)}
-.task.late .day{background:var(--red);color:#fff}
 .task.today .day{background:var(--yellow);color:var(--yellow-ink)}
+.task.red{border-color:var(--red);background:var(--red-bg)}
+.task.red .day{background:var(--red);color:#fff}
+.task.blocked{border-color:var(--amber)}
+.task.blocked .day{background:var(--amber);color:#fff}
 .task.done .day{background:var(--green-bg);color:var(--green)}
-.task.late{border-color:var(--red)}
 .body{padding:12px 14px;min-width:0}
-.row{display:flex;flex-wrap:wrap;gap:6px 10px;align-items:center;margin-bottom:4px;font-size:14px}
-.tag{font-weight:700;color:var(--mut)}
-.late .tag{color:var(--red)}
+.row{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-bottom:6px;font-size:14px}
+.tag{font-weight:700;color:var(--mut);margin-right:2px}
+.red .tag{color:var(--red)}
 .today .tag{color:var(--ink)}
+.blocked .tag{color:var(--amber)}
 .done .tag{color:var(--green)}
-.who{background:var(--tint);border-radius:6px;padding:1px 8px;font-weight:600}
+.pill{background:var(--tint);border-radius:6px;padding:1px 8px;font-weight:600;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pill.hot{background:var(--red);color:#fff}
 .title{margin:0;font-size:18px;font-weight:500;overflow-wrap:anywhere;white-space:pre-wrap}
 .done .title{color:var(--mut)}
-.note{margin-top:10px;background:var(--green-bg);border-radius:8px;padding:8px 10px;font-size:16px;overflow-wrap:anywhere;white-space:pre-wrap}
-.note span{display:block;font-size:13px;font-weight:700;color:var(--green)}
-.note small{display:block;color:var(--mut);margin-top:4px;font-size:13px}
-.acts{display:flex;gap:8px;align-items:center;margin-top:12px}
-.acts:empty{display:none}
-.acts .btn{min-height:50px;font-size:17px}
-.mg{display:flex;gap:4px;margin-left:auto;flex:none}
-.lnk,.del{border:0;background:transparent;font-weight:600;padding:10px 8px;min-height:44px}
-.lnk{color:var(--ink)}
-.del{color:var(--red)}
-.btn.sec{background:var(--surface);color:var(--ink);border:1px solid var(--line)}
-.dock-in{max-width:608px;margin:0 auto;display:grid;grid-template-columns:1fr 2fr;gap:10px}
-.person{display:flex;align-items:center;gap:10px;padding:12px 0;border-bottom:1px solid var(--line)}
-.person div{flex:1;min-width:0;font-weight:600;overflow-wrap:anywhere}
-.person small{display:block;color:var(--mut);font-weight:400;font-size:14px}
+.box{margin-top:10px;border-radius:8px;padding:8px 10px;font-size:16px;overflow-wrap:anywhere;white-space:pre-wrap}
+.box span{display:block;font-size:13px;font-weight:700}
+.box small{display:block;color:var(--mut);margin-top:4px;font-size:13px;white-space:normal}
+.box .lnk{padding:6px 0;min-height:36px}
+.box.ok{background:var(--green-bg)}.box.ok span{color:var(--green)}
+.box.warn{background:var(--amber-bg)}.box.warn span{color:var(--amber)}
+.big{display:grid;grid-template-columns:2fr 1fr;gap:8px;margin-top:12px}
+.big:empty{display:none}
+.big .btn{min-height:50px;font-size:16px}
+.big .btn:only-child{grid-column:1/-1}
+.links{display:flex;flex-wrap:wrap;justify-content:flex-end;margin:6px -8px -8px 0}
+.links:empty{display:none}
 
 .empty{text-align:center;padding:36px 16px;color:var(--mut)}
 .empty b{display:block;color:var(--ink);font:700 22px/1.2 var(--cond);margin-bottom:4px}
 
-.dock{position:fixed;left:0;right:0;bottom:0;z-index:4;background:var(--bg);border-top:1px solid var(--line);
-  padding:12px 16px calc(12px + env(safe-area-inset-bottom))}
+/* Liste öğeleri (makine, ekip) */
+.item{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:12px 14px;margin-bottom:10px}
+button.item{display:block;width:100%;text-align:left;color:var(--ink)}
+.item b{display:block;font-size:18px;font-weight:600;overflow-wrap:anywhere}
+.item small{display:block;color:var(--mut);font-size:14px;overflow-wrap:anywhere}
+.item .row{margin:6px 0 0}
+.item.off{opacity:.6}
+.addbtn{margin-bottom:14px}
 
+/* Rapor */
+.tiles{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:4px 0 16px}
+.tile{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:10px}
+.tile b{display:block;font:700 28px/1 var(--cond)}
+.tile span{font-size:13px;color:var(--mut)}
+.tile.r b{color:var(--red)}.tile.g b{color:var(--green)}.tile.a b{color:var(--amber)}
+.tblwrap{overflow-x:auto;background:var(--surface);border:1px solid var(--line);border-radius:12px;margin-bottom:16px}
+table{border-collapse:collapse;width:100%;font-size:15px}
+th,td{padding:10px 12px;text-align:left;border-bottom:1px solid var(--line);white-space:nowrap}
+th{font-size:13px;color:var(--mut);font-weight:700}
+tr:last-child td{border-bottom:0}
+td.n,th.n{text-align:right}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+
+/* Geçmiş satırı */
+.hrow{display:grid;grid-template-columns:62px 1fr;gap:10px;padding:10px 0;border-bottom:1px solid var(--line);font-size:15px}
+.hrow:last-child{border-bottom:0}
+.hrow .hd{font:600 16px/1.3 var(--cond);color:var(--mut)}
+.hrow b{display:block;font-weight:600;overflow-wrap:anywhere}
+.hrow small{display:block;color:var(--mut)}
+.hrow p{margin:4px 0 0;overflow-wrap:anywhere;white-space:pre-wrap}
+.hrow.red small{color:var(--red)}.hrow.done small{color:var(--green)}.hrow.blocked small{color:var(--amber)}
+
+/* Alt menü ve ekle butonu */
+.nav{position:fixed;left:0;right:0;bottom:0;z-index:6;background:var(--surface);border-top:1px solid var(--line);padding-bottom:env(safe-area-inset-bottom)}
+.nav div{max-width:640px;margin:0 auto;display:grid;grid-template-columns:repeat(4,1fr)}
+.nav button{border:0;background:none;padding:8px 2px 9px;display:flex;flex-direction:column;align-items:center;gap:2px;font-size:12px;font-weight:600;color:var(--mut);min-height:58px}
+.nav button[aria-current="page"]{color:var(--accent)}
+.nav svg{width:24px;height:24px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.fab{position:fixed;right:max(16px,calc(50% - 304px));bottom:calc(74px + env(safe-area-inset-bottom));z-index:6;border:0;border-radius:999px;
+  background:var(--yellow);color:var(--yellow-ink);font-weight:700;font-size:17px;padding:14px 22px;box-shadow:0 6px 18px rgba(0,0,0,.25)}
+
+/* Alttan açılan paneller */
 dialog{border:0;padding:0;margin:auto auto 0;width:100%;max-width:560px;max-height:92vh;border-radius:18px 18px 0 0;background:var(--surface);color:var(--ink)}
 dialog::backdrop{background:rgba(10,18,32,.55)}
 dialog[open]{animation:up .2s ease-out}
@@ -128,17 +181,23 @@ dialog[open]{animation:up .2s ease-out}
 @media (prefers-reduced-motion:reduce){dialog[open]{animation:none}}
 .sheet{padding:10px 18px calc(18px + env(safe-area-inset-bottom))}
 .grip{width:42px;height:5px;border-radius:3px;background:var(--line);margin:0 auto 14px}
-.sheet h3{font:700 26px/1.1 var(--cond);margin:0 0 4px}
-.sheet .lead{margin:0 0 16px;color:var(--mut);font-size:15px;overflow-wrap:anywhere}
-.chips{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 18px}
-.chip{border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:10px 16px;font-weight:600;min-height:46px}
+.sheet h3{font:700 26px/1.1 var(--cond);margin:0 0 4px;overflow-wrap:anywhere}
+.sheet .lead{margin:0 0 16px;color:var(--mut);font-size:15px;overflow-wrap:anywhere;white-space:pre-wrap}
+.chips{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 16px}
+.chip{border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:999px;padding:9px 15px;font-weight:600;min-height:44px}
 .chip[aria-pressed="true"]{background:var(--navy);border-color:var(--navy);color:#fff}
+.chip.hot[aria-pressed="true"]{background:var(--red);border-color:var(--red)}
 .chips .none{color:var(--mut);font-size:15px;margin:0}
-textarea.inp{resize:vertical;min-height:110px}
+textarea.inp{resize:vertical;min-height:100px}
 .sheet .btn+.btn{margin-top:6px}
+.sheet .acts3{display:flex;gap:4px;flex-wrap:wrap;margin:-6px 0 12px}
+.pick{display:flex;align-items:center;justify-content:center;gap:8px;border:2px dashed var(--line);border-radius:12px;min-height:56px;margin:0 0 12px;font-weight:600;color:var(--mut);cursor:pointer}
+#phPrev{display:block;max-width:100%;max-height:220px;border-radius:10px;margin:0 auto 4px}
+#phImg{display:block;max-width:100%;max-height:70vh;margin:0 auto 12px;border-radius:10px}
 
-#toast{position:fixed;left:50%;bottom:calc(96px + env(safe-area-inset-bottom));transform:translateX(-50%);z-index:20;
-  background:var(--ink);color:var(--bg);padding:12px 18px;border-radius:10px;font-weight:600;max-width:calc(100% - 32px);text-align:center;box-shadow:0 6px 20px rgba(0,0,0,.25)}
+#toast{position:fixed;left:50%;bottom:calc(24px + env(safe-area-inset-bottom));transform:translateX(-50%);z-index:30;
+  background:var(--ink);color:var(--bg);padding:12px 18px;border-radius:10px;font-weight:600;width:max-content;max-width:calc(100% - 32px);text-align:center;box-shadow:0 6px 20px rgba(0,0,0,.25)}
+body.mgr #toast{bottom:calc(140px + env(safe-area-inset-bottom))}
 #toast.bad{background:var(--red);color:#fff}
 </style></head><body>
 
@@ -150,7 +209,7 @@ textarea.inp{resize:vertical;min-height:110px}
     <h1>Bakım Görevleri</h1>
     <p class="sub">Makine bakım ekibinin görev listesi</p>
     <label class="f" for="name">Adınız soyadınız</label>
-    <input id="name" class="inp" autocomplete="name" placeholder="Örn. Ahmet Yılmaz">
+    <input id="name" class="inp" autocomplete="name" maxlength="80" placeholder="Örn. Ahmet Yılmaz">
     <div class="seg" role="group" aria-label="Rol">
       <button type="button" data-role="staff" aria-pressed="true">Personel</button>
       <button type="button" data-role="manager" aria-pressed="false">Yönetici</button>
@@ -171,43 +230,96 @@ textarea.inp{resize:vertical;min-height:110px}
       <div class="t"><b>Bakım Görevleri</b><span id="hi"></span></div>
       <button id="out">Çıkış</button>
     </div>
-    <div class="stats">
-      <div class="stat"><b id="nLate">0</b><span><i style="background:#ff6b6b"></i>Gecikmiş</span></div>
+    <div class="stats" id="stats">
+      <div class="stat"><b id="nLate">0</b><span><i style="background:#ff6b6b"></i>Kırmızı</span></div>
       <div class="stat"><b id="nToday">0</b><span><i style="background:var(--yellow)"></i>Bugün</span></div>
       <div class="stat"><b id="nOpen">0</b><span><i style="background:#fff"></i>Açık</span></div>
+      <div class="stat"><b id="nBlock">0</b><span><i style="background:#f59e0b"></i>Sorunlu</span></div>
     </div>
   </header>
   <main>
     <div id="bell" class="notice" hidden>
-      <p><b>Bildirimler kapalı</b>Yeni görev gelince telefonuna haber verelim.</p>
+      <p><b id="bellT"></b><span id="bellD"></span></p>
       <button id="bellBtn">Aç</button>
     </div>
-    <div class="tabs" role="tablist">
-      <button role="tab" data-tab="open" aria-selected="true">Açık<em id="cOpen"></em></button>
-      <button role="tab" data-tab="done" aria-selected="false">Tamamlanan<em id="cDone"></em></button>
-    </div>
-    <div id="list"></div>
+
+    <section id="vTasks">
+      <div class="tabs" role="tablist">
+        <button role="tab" data-tab="open" aria-selected="true">Açık<em id="cOpen"></em></button>
+        <button role="tab" data-tab="blocked" aria-selected="false">Sorunlu<em id="cBlock"></em></button>
+        <button role="tab" data-tab="done" aria-selected="false">Biten<em id="cDone"></em></button>
+      </div>
+      <div class="filter" id="whoFilter" hidden></div>
+      <div id="list"></div>
+      <p class="mut" id="doneHint" hidden style="font-size:14px;text-align:center">Son 30 günde bitenler gösteriliyor. Eskiler için Rapor bölümüne bakın.</p>
+    </section>
+
+    <section id="vMachines" hidden>
+      <h2 class="vh">Makineler</h2>
+      <p class="vlead">Makineye dokununca bakım geçmişini görürsün.</p>
+      <button class="btn navy addbtn" id="addMach">+ Makine ekle</button>
+      <div id="machList"></div>
+    </section>
+
+    <section id="vTeam" hidden>
+      <h2 class="vh">Ekip</h2>
+      <p class="vlead">Yeni kişi uygulama adresini açıp adını yazarak giriş yapınca burada görünür.</p>
+      <button class="btn navy addbtn" id="invite">Uygulama adresini paylaş</button>
+      <div id="teamList"></div>
+    </section>
+
+    <section id="vReport" hidden>
+      <h2 class="vh">Rapor</h2>
+      <div class="chips" id="rpChips">
+        <button type="button" class="chip" data-p="month" aria-pressed="true">Bu ay</button>
+        <button type="button" class="chip" data-p="prev" aria-pressed="false">Geçen ay</button>
+        <button type="button" class="chip" data-p="week" aria-pressed="false">Son 7 gün</button>
+        <button type="button" class="chip" data-p="custom" aria-pressed="false">Tarih seç</button>
+      </div>
+      <div class="two" id="rpCustom" hidden>
+        <div><label class="f" for="rpFrom">Başlangıç</label><input id="rpFrom" class="inp" type="date"></div>
+        <div><label class="f" for="rpTo">Bitiş</label><input id="rpTo" class="inp" type="date"></div>
+      </div>
+      <label class="f" for="rpWho">Kişi</label>
+      <select id="rpWho" class="inp"></select>
+      <div id="rpBody"></div>
+      <button id="rpXls" class="btn navy" disabled>Excel’e aktar</button>
+    </section>
   </main>
-  <div class="dock" id="dock" hidden><div class="dock-in"><button id="peopleBtn" class="btn sec">Personel</button><button id="newBtn" class="btn primary">+ Yeni görev</button></div></div>
+
+  <button class="fab" id="fab" hidden>+ Yeni görev</button>
+  <nav class="nav" id="nav" hidden><div>
+    <button data-view="tasks" aria-current="page"><svg viewBox="0 0 24 24"><path d="M10 6h10M10 12h10M10 18h10M3.5 6l1.5 1.5L7.5 5M3.5 12l1.5 1.5 2.5-2.5M3.5 18l1.5 1.5 2.5-2.5"/></svg>Görevler</button>
+    <button data-view="machines"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3.5"/><path d="M12 2.5v3M12 18.5v3M2.5 12h3M18.5 12h3M5.3 5.3l2.1 2.1M16.6 16.6l2.1 2.1M5.3 18.7l2.1-2.1M16.6 7.4l2.1-2.1"/></svg>Makineler</button>
+    <button data-view="team"><svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20.5c0-3.6 2.9-6 6.5-6s6.5 2.4 6.5 6M15.5 4.6a3.5 3.5 0 010 6.8M18 14.8c2.2.6 3.5 2.6 3.5 5.7"/></svg>Ekip</button>
+    <button data-view="report"><svg viewBox="0 0 24 24"><path d="M4 20V11M10 20V5M16 20v-6M21.5 20h-19"/></svg>Rapor</button>
+  </div></nav>
 </div>
 
-<dialog id="dlgNew">
+<dialog id="dlgTask">
   <div class="sheet">
     <div class="grip"></div>
-    <h3 id="newH">Yeni görev</h3>
-    <p class="lead" id="newLead">Seçtiğin kişiye hemen bildirim gider.</p>
+    <h3 id="tH">Yeni görev</h3>
+    <p class="lead" id="tLead"></p>
     <label class="f">Kime</label>
-    <div class="chips" id="whoChips"></div>
-    <label class="f">Ne zaman</label>
-    <div class="chips" id="dateChips">
+    <div class="chips" id="tWho"></div>
+    <label class="f" for="tMach">Makine</label>
+    <select id="tMach" class="inp"></select>
+    <label class="f" id="tDateL">Ne zaman</label>
+    <div class="chips" id="tDate">
       <button type="button" class="chip" data-d="0">Bugün</button>
       <button type="button" class="chip" data-d="1">Yarın</button>
       <button type="button" class="chip" data-d="pick">Başka gün</button>
     </div>
-    <input id="date" class="inp" type="date" hidden>
-    <label class="f" for="title">Görev</label>
-    <textarea id="title" class="inp" rows="3" placeholder="Örn. 3 numaralı presin yağını değiştir"></textarea>
-    <button id="add" class="btn navy">Görevi gönder</button>
+    <input id="tDateIn" class="inp" type="date" hidden>
+    <label class="f">Öncelik</label>
+    <div class="chips" id="tPrio">
+      <button type="button" class="chip" data-p="normal">Normal</button>
+      <button type="button" class="chip hot" data-p="high">Acil (kırmızı)</button>
+    </div>
+    <label class="f" for="tTitle">Görev</label>
+    <textarea id="tTitle" class="inp" rows="3" maxlength="2000" placeholder="Örn. Presin hidrolik yağını kontrol et"></textarea>
+    <button id="tSave" class="btn navy">Görevi gönder</button>
     <button class="btn ghost" data-close>Vazgeç</button>
   </div>
 </dialog>
@@ -216,20 +328,60 @@ textarea.inp{resize:vertical;min-height:110px}
   <div class="sheet">
     <div class="grip"></div>
     <h3>Görev yapıldı</h3>
-    <p class="lead" id="doneTitle"></p>
-    <label class="f" for="note">Ne yaptın?</label>
-    <textarea id="note" class="inp" rows="4" placeholder="Kısaca yaz, örn. Yağ değiştirildi, filtre temizlendi"></textarea>
-    <button id="save" class="btn ok" disabled>Kaydet</button>
+    <p class="lead" id="dTitle"></p>
+    <label class="f" for="dNote">Ne yaptın?</label>
+    <textarea id="dNote" class="inp" rows="4" maxlength="2000" placeholder="Kısaca yaz, örn. Yağ değiştirildi, filtre temizlendi"></textarea>
+    <label class="f">Fotoğraf (isteğe bağlı)</label>
+    <label class="pick" id="phPick"><input id="ph" type="file" accept="image/*" hidden>📷 Fotoğraf çek veya seç</label>
+    <div id="phBox" hidden><img id="phPrev" alt="Seçilen fotoğraf"><div style="text-align:center"><button type="button" class="lnk danger" id="phDel">Fotoğrafı kaldır</button></div></div>
+    <button id="dSave" class="btn ok" disabled>Kaydet</button>
     <button class="btn ghost" data-close>Vazgeç</button>
   </div>
 </dialog>
 
-<dialog id="dlgPeople">
+<dialog id="dlgBlock">
   <div class="sheet">
     <div class="grip"></div>
-    <h3>Personel</h3>
-    <p class="lead">Silinen kişinin açık görevleri de silinir, tamamlananlar kayıtta kalır. Kişi tekrar giriş yaparsa listeye geri gelir.</p>
-    <div id="people"></div>
+    <h3>Görev yapılamadı</h3>
+    <p class="lead" id="bTitle"></p>
+    <label class="f" for="bNote">Neden yapılamadı?</label>
+    <textarea id="bNote" class="inp" rows="3" maxlength="1000" placeholder="Örn. Yedek parça yok, makine durdurulamadı"></textarea>
+    <button id="bSave" class="btn navy" disabled>Yöneticiye bildir</button>
+    <button class="btn ghost" data-close>Vazgeç</button>
+  </div>
+</dialog>
+
+<dialog id="dlgMachEdit">
+  <div class="sheet">
+    <div class="grip"></div>
+    <h3 id="meH">Makine ekle</h3>
+    <label class="f" for="meName">Makine adı</label>
+    <input id="meName" class="inp" maxlength="120" placeholder="Örn. Pres 3">
+    <label class="f" for="meNote">Yer veya not (isteğe bağlı)</label>
+    <input id="meNote" class="inp" maxlength="200" placeholder="Örn. B salonu, seri no 4471">
+    <button id="meSave" class="btn navy">Kaydet</button>
+    <button class="btn ghost" data-close>Vazgeç</button>
+  </div>
+</dialog>
+
+<dialog id="dlgMach">
+  <div class="sheet">
+    <div class="grip"></div>
+    <h3 id="mvName"></h3>
+    <p class="lead" id="mvNote"></p>
+    <button class="btn primary" id="mvTask">+ Bu makineye görev ver</button>
+    <div class="acts3"><button class="lnk" id="mvEdit">Düzenle</button><button class="lnk danger" id="mvDel">Makineyi sil</button></div>
+    <label class="f">Bakım geçmişi</label>
+    <div id="mvHist"></div>
+    <button class="btn ghost" data-close>Kapat</button>
+  </div>
+</dialog>
+
+<dialog id="dlgPhoto">
+  <div class="sheet">
+    <div class="grip"></div>
+    <img id="phImg" alt="Görev fotoğrafı" hidden>
+    <p class="mut" id="phMsg" style="text-align:center">Yükleniyor…</p>
     <button class="btn ghost" data-close>Kapat</button>
   </div>
 </dialog>
@@ -239,242 +391,543 @@ textarea.inp{resize:vertical;min-height:110px}
 <script src="config.js"></script>
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import { getFirestore, collection, doc, setDoc, addDoc, updateDoc, deleteDoc, onSnapshot, query, where, arrayUnion, serverTimestamp, writeBatch } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import { initializeFirestore, getFirestore, persistentLocalCache, persistentMultipleTabManager, collection, doc, getDoc, getDocs, addDoc, setDoc, updateDoc, onSnapshot, query, where, arrayUnion, arrayRemove, serverTimestamp, writeBatch, deleteField } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 import { getMessaging, getToken, isSupported } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-messaging.js";
 
-const app = initializeApp(CFG.firebase), db = getFirestore(app);
+/* ---------- Kurulum ---------- */
+const app = initializeApp(CFG.firebase);
+let db;
+try { db = initializeFirestore(app, { localCache: persistentLocalCache({ tabManager: persistentMultipleTabManager() }) }); }
+catch { db = getFirestore(app); }
+
 const $ = s => document.querySelector(s), $$ = s => [...document.querySelectorAll(s)];
 const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 const MONTHS = ["Oca","Şub","Mar","Nis","May","Haz","Tem","Ağu","Eyl","Eki","Kas","Ara"];
 const DAYS = ["Pazar","Pazartesi","Salı","Çarşamba","Perşembe","Cuma","Cumartesi"];
+
+/* Tarih yardımcıları (YYYY-AA-GG) */
 const iso = d => d.toLocaleDateString("sv-SE");
 const today = () => iso(new Date());
 const parse = s => new Date(s + "T12:00");
-const addDays = n => { const d = new Date(); d.setDate(d.getDate() + n); return iso(d); };
-const diff = (a, b) => Math.round((parse(a) - parse(b)) / 864e5);
-const fmtTs = ts => new Date(ts.seconds * 1000).toLocaleString("tr-TR", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" });
+const ymd = s => s.split("-").map(Number);
+const shift = (s, n) => { const [y, m, d] = ymd(s); return new Date(Date.UTC(y, m - 1, d + n)).toISOString().slice(0, 10); };
+const diff = (a, b) => { const [y1, m1, d1] = ymd(a), [y2, m2, d2] = ymd(b); return Math.round((Date.UTC(y1, m1 - 1, d1) - Date.UTC(y2, m2 - 1, d2)) / 864e5); };
+const fmt = s => s ? s.split("-").reverse().join(".") : "";
+const tsDate = ts => ts && ts.toDate ? ts.toDate() : null;
+const fmtTs = ts => { const d = tsDate(ts); return d ? d.toLocaleString("tr-TR", { day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" }) : ""; };
 
-let me = JSON.parse(localStorage.getItem("me") || "null"), users = [], tasks = [];
-let role = "staff", tab = "open", doneId = null, pickWho = null, pickDate = null, started = false, editId = null;
+/* ---------- Durum ---------- */
+let me = JSON.parse(localStorage.getItem("me") || "null");
+let users = [], machines = [], staffTasks = [];
+let openMap = new Map(), doneMap = new Map();
+const extra = new Map();
+let view = "tasks", tab = "open", fWho = "all", started = false, swReg = null, lastDay = today();
+const isMgr = () => me && me.role === "manager";
+const allTasks = () => isMgr() ? [...new Map([...doneMap, ...openMap]).values()] : staffTasks;
+const findTask = id => allTasks().find(t => t.id === id) || extra.get(id);
+const userName = id => id === me.id ? "Ben" : (users.find(u => u.id === id)?.name || "");
 
 function toast(msg, bad) {
   const t = $("#toast"); t.textContent = msg; t.className = bad ? "bad" : ""; t.hidden = false;
-  clearTimeout(toast.h); toast.h = setTimeout(() => t.hidden = true, bad ? 5000 : 2600);
+  clearTimeout(toast.h); toast.h = setTimeout(() => t.hidden = true, bad ? 5500 : 2800);
 }
-const showErr = e => toast("Veritabanına ulaşılamadı: " + e.message, true);
+const showErr = e => { console.error(e); toast("İşlem yapılamadı: " + (e?.message || e), true); };
+/* Yazma işlemini bekletmeden yapar; internet yoksa sıraya alınır */
+function fire(p, msg) { p.catch(showErr); if (msg) toast(navigator.onLine ? msg : msg + " İnternet gelince gönderilecek."); }
 
-/* Giriş */
+/* ---------- Giriş / Çıkış ---------- */
+let role = "staff";
 $$(".seg button").forEach(b => b.onclick = () => {
   role = b.dataset.role;
   $$(".seg button").forEach(x => x.setAttribute("aria-pressed", x === b));
   $("#pinWrap").hidden = role !== "manager";
 });
 $("#go").onclick = async () => {
-  const name = $("#name").value.trim();
+  const name = $("#name").value.trim().replace(/\s+/g, " ");
   if (!name) return toast("Adınızı yazın.", true);
-  if (role === "manager" && $("#pin").value !== CFG.managerPin) return toast("PIN yanlış.", true);
-  const u = { id: name.toLocaleLowerCase("tr").replace(/[^\p{L}\p{N}]+/gu, "-"), name, role };
+  if (role === "manager" && $("#pin").value !== String(CFG.managerPin)) return toast("PIN yanlış.", true);
+  const id = name.toLocaleLowerCase("tr").replace(/[^\p{L}\p{N}]+/gu, "-").replace(/^-+|-+$/g, "");
+  if (!id) return toast("Adınızı harflerle yazın.", true);
+  if (!navigator.onLine) return toast("İlk giriş için internet gerekli.", true);
   $("#go").disabled = true;
-  try {
-    await setDoc(doc(db, "users", u.id), { name, role }, { merge: true });
-  } catch (e) {
-    $("#go").disabled = false;
-    return toast("Giriş kaydedilemedi: " + e.message, true);
-  }
-  me = u; localStorage.setItem("me", JSON.stringify(me));
-  $("#go").disabled = false;
-  start();
+  try { await setDoc(doc(db, "users", id), { name, role }, { merge: true }); }
+  catch (e) { $("#go").disabled = false; return toast("Giriş kaydedilemedi: " + e.message, true); }
+  me = { id, name, role }; localStorage.setItem("me", JSON.stringify(me));
+  $("#go").disabled = false; start();
 };
-$("#out").onclick = () => { if (confirm("Çıkış yapılsın mı?")) { localStorage.removeItem("me"); location.reload(); } };
+function signOut() {
+  const tok = localStorage.getItem("fcmToken");
+  if (tok && me) updateDoc(doc(db, "users", me.id), { tokens: arrayRemove(tok) }).catch(() => {});
+  localStorage.removeItem("me"); localStorage.removeItem("fcmToken");
+  setTimeout(() => location.reload(), 350);
+}
+$("#out").onclick = () => { if (confirm("Çıkış yapılsın mı?")) signOut(); };
 
-/* Bildirimler */
+/* ---------- Bildirimler ---------- */
+if ("serviceWorker" in navigator) navigator.serviceWorker.register("firebase-messaging-sw.js").then(r => swReg = r).catch(() => {});
+function notifState() {
+  const show = (t, d, btn) => { $("#bell").hidden = false; $("#bellT").textContent = t; $("#bellD").textContent = d; $("#bellBtn").hidden = !btn; };
+  if (!("Notification" in window)) {
+    const ios = /iphone|ipad|ipod/i.test(navigator.userAgent);
+    return show("Bildirimler bu ekranda çalışmaz", ios ? "Safari’de Paylaş → Ana Ekrana Ekle yapıp uygulamayı ana ekrandan açın." : "Uygulamayı Chrome ile açıp ana ekrana ekleyin.", false);
+  }
+  if (Notification.permission === "granted") { $("#bell").hidden = true; return enableNotifs(true); }
+  if (Notification.permission === "denied") return show("Bildirimler engellendi", "Telefon ayarlarından bu uygulamaya bildirim izni verin.", false);
+  show("Bildirimler kapalı", "Yeni görev gelince telefonuna haber verelim.", true);
+}
 async function enableNotifs(silent) {
   try {
     if (!(await isSupported())) throw new Error("Bu tarayıcı bildirimi desteklemiyor");
     if (await Notification.requestPermission() !== "granted") throw new Error("İzin verilmedi");
-    const reg = await navigator.serviceWorker.register("firebase-messaging-sw.js");
+    const reg = swReg || await navigator.serviceWorker.register("firebase-messaging-sw.js");
     await navigator.serviceWorker.ready;
     const token = await getToken(getMessaging(app), { vapidKey: CFG.vapidKey, serviceWorkerRegistration: reg });
+    const prev = localStorage.getItem("fcmToken");
     await setDoc(doc(db, "users", me.id), { tokens: arrayUnion(token) }, { merge: true });
+    if (prev && prev !== token) updateDoc(doc(db, "users", me.id), { tokens: arrayRemove(prev) }).catch(() => {});
+    localStorage.setItem("fcmToken", token);
     $("#bell").hidden = true;
     if (!silent) toast("Bildirimler açıldı.");
   } catch (e) {
-    if (!silent) alert("Bildirim açılamadı: " + e.message + "\niPhone'da önce Paylaş > Ana Ekrana Ekle yapıp uygulamayı ana ekrandan açın.");
+    if (!silent) { toast("Bildirim açılamadı: " + e.message, true); notifState(); }
   }
 }
 $("#bellBtn").onclick = () => enableNotifs(false);
 
-/* Liste */
-function when(t) {
+/* ---------- Görev kartları ---------- */
+function info(t) {
   if (t.status === "done") return { cls: "done", txt: "Tamamlandı" };
-  const n = diff(t.date, today());
-  if (n < 0) return { cls: "late", txt: `${-n} gün gecikti` };
-  if (n === 0) return { cls: "today", txt: "Bugün" };
-  if (n === 1) return { cls: "", txt: "Yarın" };
-  return { cls: "", txt: DAYS[parse(t.date).getDay()] };
+  if (t.status === "blocked") return { cls: "blocked", txt: "Yapılamadı" };
+  const n = diff(t.date, today()), red = n < 0 || t.priority === "high";
+  const txt = n < 0 ? `${-n} gün gecikti` : n === 0 ? "Bugün" : n === 1 ? "Yarın" : n < 7 ? DAYS[parse(t.date).getDay()] : `${n} gün sonra`;
+  return { cls: red ? "red" : n === 0 ? "today" : "", txt, red };
 }
 function card(t) {
-  const w = when(t), d = parse(t.date), mgr = me.role === "manager";
-  const acts = (t.status !== "done" && me.id === t.assigneeId ? `<button class="btn ok" data-done="${esc(t.id)}">✓ Yapıldı</button>` : "")
-             + (mgr ? `<span class="mg">${t.status !== "done" ? `<button class="lnk" data-edit="${esc(t.id)}">Düzenle</button>` : ""}<button class="del" data-del="${esc(t.id)}">Sil</button></span>` : "");
+  const w = info(t), d = parse(t.date), mgr = isMgr(), mine = t.assigneeId === me.id, id = esc(t.id);
+  const L = (a, txt, c = "") => `<button class="lnk ${c}" data-act="${a}" data-id="${id}">${txt}</button>`;
+  const meta = [`<span class="tag">${w.txt}</span>`];
+  if (t.priority === "high" && t.status !== "done") meta.push(`<span class="pill hot">Acil</span>`);
+  if (t.machineName) meta.push(`<span class="pill">${esc(t.machineName)}</span>`);
+  if (mgr) meta.push(`<span class="pill">${mine ? "Ben" : esc(t.assigneeName)}</span>`);
+  let box = "";
+  if (t.status === "done") box = `<div class="box ok"><span>Yapılan iş</span>${esc(t.doneNote)}<small>${fmtTs(t.doneAt) || fmt(t.doneDay)}${t.doneByName ? " · " + esc(t.doneByName) : ""}${t.doneDay && t.doneDay > t.date ? " · geç tamamlandı" : ""}</small>${t.hasPhoto ? L("photo", "📷 Fotoğrafı gör") : ""}</div>`;
+  if (t.status === "blocked") box = `<div class="box warn"><span>Neden yapılamadı</span>${esc(t.blockedReason)}<small>${fmtTs(t.blockedAt)}${t.blockedByName ? " · " + esc(t.blockedByName) : ""}</small></div>`;
+  let big = "";
+  if (t.status !== "done" && mine) big = `<button class="btn ok" data-act="done" data-id="${id}">✓ Yapıldı</button>` + (t.status === "open" ? `<button class="btn sec" data-act="block" data-id="${id}">Yapamadım</button>` : "");
+  let links = "";
+  if (mgr) {
+    if (t.status === "open") links += L("flag", t.priority === "high" ? "Kırmızıyı kaldır" : "Kırmızı yap");
+    if (t.status !== "done" && !mine) links += L("done", "Kapat");
+    if (t.status !== "open") links += L("reopen", "Tekrar aç");
+    if (t.status !== "done") links += L("edit", "Düzenle");
+    links += L("del", "Sil", "danger");
+  }
   return `<article class="task ${w.cls}">
     <div class="day"><b>${d.getDate()}</b><span>${MONTHS[d.getMonth()]}</span></div>
     <div class="body">
-      <div class="row"><span class="tag">${w.txt}</span>${mgr ? `<span class="who">${esc(t.assigneeName)}</span>` : ""}</div>
-      <p class="title">${esc(t.title)}</p>
-      ${t.status === "done" ? `<div class="note"><span>Yapılan iş</span>${esc(t.doneNote)}${t.doneAt ? `<small>${fmtTs(t.doneAt)}</small>` : ""}</div>` : ""}
-      <div class="acts">${acts}</div>
+      <div class="row">${meta.join("")}</div>
+      <p class="title">${esc(t.title)}</p>${box}
+      <div class="big">${big}</div><div class="links">${links}</div>
     </div></article>`;
 }
+function sortOpen(a, b) {
+  const ra = info(a).red ? 0 : 1, rb = info(b).red ? 0 : 1;
+  return ra - rb || a.date.localeCompare(b.date) || (a.priority === "high" ? -1 : 0) - (b.priority === "high" ? -1 : 0);
+}
+
+/* ---------- Ekranlar ---------- */
 function render() {
-  const mgr = me.role === "manager";
-  const list = mgr ? tasks : tasks.filter(t => t.assigneeId === me.id);
-  const open = list.filter(t => t.status !== "done").sort((a, b) => a.date.localeCompare(b.date));
-  const done = list.filter(t => t.status === "done").sort((a, b) => (b.doneAt?.seconds || 0) - (a.doneAt?.seconds || 0));
-  const td = today();
-  $("#nLate").textContent = open.filter(t => t.date < td).length;
+  if (!me) return;
+  if (view === "tasks") renderTasks();
+  if (view === "machines") renderMachines();
+  if (view === "team") renderTeam();
+}
+function renderTasks() {
+  const mgr = isMgr(), td = today();
+  let list = allTasks();
+  if (mgr && fWho !== "all") list = list.filter(t => t.assigneeId === (fWho === "me" ? me.id : fWho));
+  const open = list.filter(t => t.status === "open").sort(sortOpen);
+  const blocked = list.filter(t => t.status === "blocked").sort((a, b) => a.date.localeCompare(b.date));
+  const cutoff = shift(td, -30);
+  const done = list.filter(t => t.status === "done" && (t.doneDay || "") >= cutoff).sort((a, b) => (b.doneDay || "").localeCompare(a.doneDay || "") || (tsDate(b.doneAt) || 0) - (tsDate(a.doneAt) || 0));
+  $("#nLate").textContent = open.filter(t => info(t).red).length;
   $("#nToday").textContent = open.filter(t => t.date === td).length;
   $("#nOpen").textContent = open.length;
+  $("#nBlock").textContent = blocked.length;
   $("#cOpen").textContent = open.length || "";
+  $("#cBlock").textContent = blocked.length || "";
   $("#cDone").textContent = done.length || "";
-  const show = tab === "open" ? open : done;
-  $("#list").innerHTML = show.length ? show.map(card).join("") : tab === "open"
-    ? (mgr ? `<div class="empty"><b>Açık görev yok</b>Yeni görev yazmak için alttaki butona dokun.</div>`
-           : `<div class="empty"><b>Açık görevin yok</b>Yeni görev gelince burada görünür.</div>`)
-    : `<div class="empty"><b>Henüz tamamlanan yok</b>Yapılan görevler açıklamasıyla burada listelenir.</div>`;
+  if (mgr) {
+    const chips = [["all", "Herkes"], ["me", "Ben"], ...users.filter(u => u.id !== me.id).map(u => [u.id, u.name])];
+    $("#whoFilter").hidden = false;
+    $("#whoFilter").innerHTML = chips.map(([v, n]) => `<button type="button" class="chip" data-fw="${esc(v)}" aria-pressed="${fWho === v}">${esc(n)}</button>`).join("");
+  }
+  const show = tab === "open" ? open : tab === "blocked" ? blocked : done;
+  const empty = {
+    open: mgr ? ["Açık görev yok", "Yeni görev için sağ alttaki butona dokun."] : ["Açık görevin yok", "Yeni görev gelince burada görünür."],
+    blocked: ["Sorunlu görev yok", mgr ? "Personel “Yapamadım” derse görev burada görünür." : "Yapamadığın görevler burada görünür."],
+    done: ["Henüz biten yok", "Tamamlanan görevler açıklamasıyla burada listelenir."]
+  }[tab];
+  $("#list").innerHTML = show.length ? show.map(card).join("") : `<div class="empty"><b>${empty[0]}</b>${empty[1]}</div>`;
+  $("#doneHint").hidden = !(tab === "done" && mgr);
 }
 $$(".tabs button").forEach(b => b.onclick = () => {
   tab = b.dataset.tab;
   $$(".tabs button").forEach(x => x.setAttribute("aria-selected", x === b));
-  render();
+  renderTasks();
 });
+$("#whoFilter").onclick = e => { const c = e.target.closest("[data-fw]"); if (c) { fWho = c.dataset.fw; renderTasks(); } };
 
-/* Kart butonları */
-document.addEventListener("click", async e => {
-  const done = e.target.closest("[data-done]"), del = e.target.closest("[data-del]");
-  if (done) {
-    doneId = done.dataset.done;
-    const t = tasks.find(x => x.id === doneId);
-    $("#doneTitle").textContent = t ? t.title : "";
-    $("#note").value = ""; $("#save").disabled = true;
-    $("#dlgDone").showModal(); $("#note").focus();
-  }
-  if (del && confirm("Bu görev silinsin mi?")) {
-    try { await deleteDoc(doc(db, "tasks", del.dataset.del)); toast("Görev silindi."); } catch (err) { showErr(err); }
-  }
-  const ed = e.target.closest("[data-edit]");
-  if (ed) openTask(tasks.find(x => x.id === ed.dataset.edit));
-  const du = e.target.closest("[data-deluser]");
-  if (du) deleteUser(users.find(x => x.id === du.dataset.deluser));
+function setView(v) {
+  view = v;
+  $$(".nav button").forEach(b => b.toggleAttribute("aria-current", b.dataset.view === v));
+  $$(".nav button[aria-current]").forEach(b => b.setAttribute("aria-current", "page"));
+  $("#vTasks").hidden = v !== "tasks"; $("#vMachines").hidden = v !== "machines";
+  $("#vTeam").hidden = v !== "team"; $("#vReport").hidden = v !== "report";
+  $("#stats").hidden = v !== "tasks"; $("#fab").hidden = !(isMgr() && v === "tasks");
+  window.scrollTo(0, 0);
+  if (v === "report") { fillReportWho(); loadReport(); } else render();
+}
+$$(".nav button").forEach(b => b.onclick = () => setView(b.dataset.view));
+
+/* ---------- Kart işlemleri ---------- */
+let curId = null, photoData = null;
+document.addEventListener("click", e => {
+  const b = e.target.closest("[data-act]");
+  if (b) act(b.dataset.act, b.dataset.id);
   if (e.target.closest("[data-close]")) e.target.closest("dialog").close();
 });
 $$("dialog").forEach(d => d.addEventListener("click", e => { if (e.target === d) d.close(); }));
 
-$("#note").oninput = e => $("#save").disabled = !e.target.value.trim();
-$("#save").onclick = async () => {
-  const note = $("#note").value.trim();
-  if (!note) return;
-  $("#save").disabled = true;
-  try {
-    await updateDoc(doc(db, "tasks", doneId), { status: "done", doneNote: note, doneAt: serverTimestamp() });
-    $("#dlgDone").close(); toast("Görev tamamlandı olarak kaydedildi.");
-  } catch (e) { $("#save").disabled = false; showErr(e); }
-};
-
-/* Yeni görev */
-function drawWho() {
-  $("#whoChips").innerHTML = users.length
-    ? users.map(u => `<button type="button" class="chip" data-who="${esc(u.id)}" aria-pressed="${u.id === pickWho}">${esc(u.name)}</button>`).join("")
-    : `<p class="none">Henüz personel yok. Personel uygulamaya bir kez giriş yapınca burada görünür.</p>`;
-}
-function setDate(key) {
-  $$("#dateChips .chip").forEach(c => c.setAttribute("aria-pressed", c.dataset.d === key));
-  $("#date").hidden = key !== "pick";
-  if (key === "pick") { if (!$("#date").value) $("#date").value = addDays(2); pickDate = $("#date").value; }
-  else pickDate = addDays(+key);
-}
-$("#whoChips").onclick = e => { const c = e.target.closest("[data-who]"); if (c) { pickWho = c.dataset.who; drawWho(); } };
-$("#dateChips").onclick = e => { const c = e.target.closest("[data-d]"); if (c) setDate(c.dataset.d); };
-$("#date").onchange = e => pickDate = e.target.value || null;
-function openTask(t) {
-  editId = t ? t.id : null;
-  $("#newH").textContent = t ? "Görevi düzenle" : "Yeni görev";
-  $("#newLead").textContent = t ? "Kişi, tarih veya açıklamayı değiştirebilirsin." : "Seçtiğin kişiye hemen bildirim gider.";
-  $("#add").textContent = t ? "Değişiklikleri kaydet" : "Görevi gönder";
-  if (t) {
-    pickWho = t.assigneeId; $("#title").value = t.title;
-    if (t.date === addDays(0)) setDate("0");
-    else if (t.date === addDays(1)) setDate("1");
-    else { $("#date").value = t.date; setDate("pick"); }
-  } else {
-    if (!users.some(u => u.id === pickWho)) pickWho = users.length === 1 ? users[0].id : null;
-    setDate("0"); $("#title").value = "";
+function act(a, id) {
+  const t = findTask(id); if (!t) return;
+  const ref = doc(db, "tasks", id), by = { updatedBy: me.id };
+  if (a === "done") {
+    curId = id; photoData = null;
+    $("#dTitle").textContent = t.title; $("#dNote").value = ""; $("#dSave").disabled = true;
+    $("#ph").value = ""; $("#phBox").hidden = true; $("#phPick").hidden = false;
+    $("#dlgDone").showModal();
   }
-  drawWho(); $("#dlgNew").showModal();
+  if (a === "block") { curId = id; $("#bTitle").textContent = t.title; $("#bNote").value = ""; $("#bSave").disabled = true; $("#dlgBlock").showModal(); }
+  if (a === "flag") { const hi = t.priority !== "high"; fire(updateDoc(ref, { priority: hi ? "high" : "normal", ...by }), hi ? "Görev kırmızı işaretlendi." : "Kırmızı işaret kaldırıldı."); }
+  if (a === "reopen" && confirm("Görev tekrar açılsın mı?")) {
+    const b = writeBatch(db);
+    b.update(ref, { status: "open", doneNote: deleteField(), doneAt: deleteField(), doneDay: deleteField(), doneById: deleteField(), doneByName: deleteField(),
+      blockedReason: deleteField(), blockedAt: deleteField(), blockedById: deleteField(), blockedByName: deleteField(), hasPhoto: false, ...by });
+    b.delete(doc(db, "photos", id));
+    fire(b.commit(), "Görev tekrar açıldı.");
+  }
+  if (a === "edit") openTaskSheet("edit", t);
+  if (a === "del" && confirm("Bu görev silinsin mi?")) {
+    const b = writeBatch(db); b.delete(ref); b.delete(doc(db, "photos", id));
+    fire(b.commit(), "Görev silindi.");
+  }
+  if (a === "photo") showPhoto(id);
 }
-$("#newBtn").onclick = () => openTask(null);
-$("#add").onclick = async () => {
-  const u = users.find(x => x.id === pickWho), title = $("#title").value.trim();
-  if (!u) return toast("Görevin kime verileceğini seç.", true);
-  if (!pickDate) return toast("Bir tarih seç.", true);
-  if (!title) return toast("Görevi yaz.", true);
-  $("#add").disabled = true;
+
+/* Yapıldı */
+$("#dNote").oninput = e => $("#dSave").disabled = !e.target.value.trim();
+$("#ph").onchange = async e => {
+  const f = e.target.files[0]; if (!f) return;
+  try { photoData = await compress(f); $("#phPrev").src = photoData; $("#phBox").hidden = false; $("#phPick").hidden = true; }
+  catch (err) { photoData = null; toast(err.message, true); }
+};
+$("#phDel").onclick = () => { photoData = null; $("#ph").value = ""; $("#phBox").hidden = true; $("#phPick").hidden = false; };
+async function compress(file) {
+  const url = URL.createObjectURL(file);
   try {
-    const data = { title, date: pickDate, assigneeId: u.id, assigneeName: u.name };
-    if (editId) {
-      await updateDoc(doc(db, "tasks", editId), data);
-      $("#dlgNew").close(); toast("Görev güncellendi.");
-    } else {
-      await addDoc(collection(db, "tasks"), { ...data, status: "open", createdAt: serverTimestamp() });
-      $("#dlgNew").close(); toast(`Görev gönderildi: ${u.name}`);
+    const img = await new Promise((res, rej) => { const i = new Image(); i.onload = () => res(i); i.onerror = () => rej(new Error("Fotoğraf okunamadı. Başka bir fotoğraf deneyin.")); i.src = url; });
+    let max = 1280, q = 0.72, out = "";
+    for (let k = 0; k < 6; k++) {
+      const s = Math.min(1, max / Math.max(img.naturalWidth, img.naturalHeight)), c = document.createElement("canvas");
+      c.width = Math.round(img.naturalWidth * s); c.height = Math.round(img.naturalHeight * s);
+      c.getContext("2d").drawImage(img, 0, 0, c.width, c.height);
+      out = c.toDataURL("image/jpeg", q);
+      if (out.length < 700000) return out;
+      max *= 0.8; q = Math.max(0.45, q - 0.07);
     }
-  } catch (e) { showErr(e); }
-  $("#add").disabled = false;
+    throw new Error("Fotoğraf çok büyük.");
+  } finally { URL.revokeObjectURL(url); }
+}
+$("#dSave").onclick = () => {
+  const note = $("#dNote").value.trim(); if (!note || !curId) return;
+  const b = writeBatch(db);
+  b.update(doc(db, "tasks", curId), { status: "done", doneNote: note, doneAt: serverTimestamp(), doneDay: today(), doneById: me.id, doneByName: me.name,
+    hasPhoto: !!photoData, blockedReason: deleteField(), updatedBy: me.id });
+  if (photoData) b.set(doc(db, "photos", curId), { data: photoData, at: serverTimestamp() });
+  fire(b.commit(), "Görev tamamlandı olarak kaydedildi.");
+  $("#dlgDone").close();
+};
+/* Yapamadım */
+$("#bNote").oninput = e => $("#bSave").disabled = !e.target.value.trim();
+$("#bSave").onclick = () => {
+  const r = $("#bNote").value.trim(); if (!r || !curId) return;
+  fire(updateDoc(doc(db, "tasks", curId), { status: "blocked", blockedReason: r, blockedAt: serverTimestamp(), blockedById: me.id, blockedByName: me.name, updatedBy: me.id }), "Yöneticiye bildirildi.");
+  $("#dlgBlock").close();
+};
+/* Fotoğraf göster */
+async function showPhoto(id) {
+  $("#phImg").hidden = true; $("#phMsg").hidden = false; $("#phMsg").textContent = "Yükleniyor…";
+  $("#dlgPhoto").showModal();
+  try {
+    const s = await getDoc(doc(db, "photos", id));
+    if (!s.exists()) { $("#phMsg").textContent = "Fotoğraf bulunamadı."; return; }
+    $("#phImg").src = s.data().data; $("#phImg").hidden = false; $("#phMsg").hidden = true;
+  } catch (e) { $("#phMsg").textContent = "Fotoğraf yüklenemedi: " + e.message; }
+}
+
+/* ---------- Görev paneli (yeni / düzenle) ---------- */
+const S = {};
+function openTaskSheet(mode, src = {}) {
+  Object.assign(S, { mode, id: src.id || null, who: src.assigneeId || null, machine: src.machineId || "",
+    prio: src.priority || "normal" });
+  if (S.who && !users.some(u => u.id === S.who)) S.who = null;
+  if (S.machine && !machines.some(m => m.id === S.machine)) S.machine = "";
+  $("#tTitle").value = src.title || "";
+  const d = src.date || today();
+  if (d === today()) setDateKey("0"); else if (d === shift(today(), 1)) setDateKey("1"); else { $("#tDateIn").value = d; setDateKey("pick"); }
+  $("#tMach").innerHTML = `<option value="">Makine seçilmedi</option>` + machines.map(m => `<option value="${esc(m.id)}">${esc(m.name)}</option>`).join("");
+  $("#tMach").value = S.machine;
+  drawSheet(); $("#dlgTask").showModal();
+}
+function setDateKey(k) {
+  S.dateKey = k;
+  $("#tDateIn").hidden = k !== "pick";
+  if (k === "pick") { if (!$("#tDateIn").value) $("#tDateIn").value = shift(today(), 2); S.date = $("#tDateIn").value; }
+  else S.date = shift(today(), +k);
+}
+function drawSheet() {
+  $("#tH").textContent = S.mode === "edit" ? "Görevi düzenle" : "Yeni görev";
+  $("#tLead").textContent = S.mode === "edit" ? "Kişi veya tarih değişirse ilgili kişiye bildirim gider." : "Seçtiğin kişiye hemen bildirim gider.";
+  $("#tSave").textContent = S.mode === "edit" ? "Değişiklikleri kaydet" : "Görevi gönder";
+  const ordered = [...users.filter(u => u.id === me.id), ...users.filter(u => u.id !== me.id)];
+  $("#tWho").innerHTML = ordered.length ? ordered.map(u => `<button type="button" class="chip" data-who="${esc(u.id)}" aria-pressed="${u.id === S.who}">${u.id === me.id ? "Ben" : esc(u.name)}</button>`).join("")
+    : `<p class="none">Kişi listesi yükleniyor…</p>`;
+  $$("#tDate .chip").forEach(c => c.setAttribute("aria-pressed", c.dataset.d === S.dateKey));
+  $$("#tPrio .chip").forEach(c => c.setAttribute("aria-pressed", c.dataset.p === S.prio));
+}
+$("#tWho").onclick = e => { const c = e.target.closest("[data-who]"); if (c) { S.who = c.dataset.who; drawSheet(); } };
+$("#tDate").onclick = e => { const c = e.target.closest("[data-d]"); if (c) { setDateKey(c.dataset.d); drawSheet(); } };
+$("#tDateIn").onchange = e => { S.date = e.target.value || null; drawSheet(); };
+$("#tPrio").onclick = e => { const c = e.target.closest("[data-p]"); if (c) { S.prio = c.dataset.p; drawSheet(); } };
+$("#tMach").onchange = e => S.machine = e.target.value;
+$("#tSave").onclick = () => {
+  const u = users.find(x => x.id === S.who), title = $("#tTitle").value.trim(), date = S.date;
+  if (!u) return toast("Görevin kime verileceğini seç.", true);
+  if (!date) return toast("Bir tarih seç.", true);
+  if (!title) return toast("Görevi yaz.", true);
+  const mc = machines.find(m => m.id === S.machine);
+  const base = { title, assigneeId: u.id, assigneeName: u.name, priority: S.prio, machineId: mc ? mc.id : null, machineName: mc ? mc.name : null, updatedBy: me.id };
+  if (S.mode === "edit") {
+    fire(updateDoc(doc(db, "tasks", S.id), { ...base, date }), "Görev güncellendi.");
+  } else {
+    fire(addDoc(collection(db, "tasks"), { ...base, date, status: "open", createdAt: serverTimestamp(), createdBy: me.id }), `Görev gönderildi: ${u.id === me.id ? "kendine" : u.name}`);
+  }
+  $("#dlgTask").close();
+};
+$("#fab").onclick = () => openTaskSheet("new");
+
+/* ---------- Makineler ---------- */
+let curMach = null;
+function renderMachines() {
+  const tasks = allTasks();
+  $("#machList").innerHTML = machines.length ? machines.map(m => {
+    const open = tasks.filter(t => t.machineId === m.id && t.status !== "done").length;
+    const last = tasks.filter(t => t.machineId === m.id && t.status === "done").map(t => t.doneDay || "").sort().pop();
+    return `<button class="item" data-mach="${esc(m.id)}"><b>${esc(m.name)}</b>${m.note ? `<small>${esc(m.note)}</small>` : ""}
+      <div class="row"><span class="pill">${open ? open + " açık görev" : "Açık görev yok"}</span><span class="pill">${last ? "Son bakım: " + fmt(last) : "Son 30 günde bakım yok"}</span></div></button>`;
+  }).join("") : `<div class="empty"><b>Makine yok</b>Makineleri ekle, görev verirken seç; her makinenin bakım geçmişi tutulsun.</div>`;
+}
+$("#machList").onclick = e => { const b = e.target.closest("[data-mach]"); if (b) openMachine(b.dataset.mach); };
+function openMachEdit(m) {
+  curMach = m ? m.id : null;
+  $("#meH").textContent = m ? "Makineyi düzenle" : "Makine ekle";
+  $("#meName").value = m ? m.name : ""; $("#meNote").value = m ? (m.note || "") : "";
+  $("#dlgMachEdit").showModal(); $("#meName").focus();
+}
+$("#addMach").onclick = () => openMachEdit(null);
+$("#meSave").onclick = () => {
+  const name = $("#meName").value.trim().replace(/\s+/g, " "), note = $("#meNote").value.trim();
+  if (!name) return toast("Makine adını yaz.", true);
+  if (machines.some(m => m.id !== curMach && m.name.toLocaleLowerCase("tr") === name.toLocaleLowerCase("tr"))) return toast("Bu isimde bir makine zaten var.", true);
+  if (curMach) {
+    const b = writeBatch(db);
+    b.update(doc(db, "machines", curMach), { name, note });
+    [...openMap.values()].filter(t => t.machineId === curMach).forEach(t => b.update(doc(db, "tasks", t.id), { machineName: name }));
+    fire(b.commit(), "Makine güncellendi.");
+    $("#dlgMach").close();
+  } else fire(addDoc(collection(db, "machines"), { name, note, createdAt: serverTimestamp() }), "Makine eklendi.");
+  $("#dlgMachEdit").close();
+};
+async function openMachine(id) {
+  const m = machines.find(x => x.id === id); if (!m) return;
+  curMach = id;
+  $("#mvName").textContent = m.name; $("#mvNote").textContent = m.note || ""; $("#mvNote").hidden = !m.note;
+  $("#mvHist").innerHTML = `<p class="mut">Yükleniyor…</p>`;
+  $("#dlgMach").showModal();
+  try {
+    const s = await getDocs(query(collection(db, "tasks"), where("machineId", "==", id)));
+    const rows = s.docs.map(d => ({ id: d.id, ...d.data() })).sort((a, b) => b.date.localeCompare(a.date));
+    rows.forEach(r => extra.set(r.id, r));
+    $("#mvHist").innerHTML = rows.length ? rows.map(t => { const w = info(t); return `<div class="hrow ${w.cls}"><div class="hd">${fmt(t.date)}</div><div>
+        <b>${esc(t.title)}</b><small>${w.txt} · ${esc(t.assigneeName)}</small>
+        ${t.status === "done" ? `<p>${esc(t.doneNote)}</p>` : t.status === "blocked" ? `<p>${esc(t.blockedReason)}</p>` : ""}
+        ${t.hasPhoto ? `<button class="lnk" data-act="photo" data-id="${esc(t.id)}" style="padding-left:0">📷 Fotoğraf</button>` : ""}</div></div>`; }).join("")
+      : `<p class="mut">Bu makine için henüz görev yok.</p>`;
+  } catch (e) { $("#mvHist").innerHTML = `<p class="mut">Geçmiş yüklenemedi: ${esc(e.message)}</p>`; }
+}
+$("#mvTask").onclick = () => { $("#dlgMach").close(); openTaskSheet("new", { machineId: curMach }); };
+$("#mvEdit").onclick = () => openMachEdit(machines.find(m => m.id === curMach));
+$("#mvDel").onclick = () => {
+  const m = machines.find(x => x.id === curMach); if (!m) return;
+  if (!confirm(`${m.name} silinsin mi?\nEski görevlerde makine adı kalır.`)) return;
+  fire(writeBatch(db).delete(doc(db, "machines", m.id)).commit(), "Makine silindi.");
+  $("#dlgMach").close();
 };
 
-/* Personel yönetimi */
-function drawPeople() {
-  $("#people").innerHTML = users.length ? users.map(u => {
-    const n = tasks.filter(t => t.assigneeId === u.id && t.status !== "done").length;
-    return `<div class="person"><div>${esc(u.name)}<small>${n ? n + " açık görev" : "Açık görevi yok"}</small></div>
-      <button class="del" data-deluser="${esc(u.id)}">Sil</button></div>`;
-  }).join("") : `<p class="none">Kayıtlı personel yok.</p>`;
+/* ---------- Ekip ---------- */
+function renderTeam() {
+  const tasks = allTasks();
+  $("#teamList").innerHTML = users.map(u => {
+    const open = tasks.filter(t => t.assigneeId === u.id && t.status !== "done"), red = open.filter(t => t.status === "open" && info(t).red).length;
+    return `<div class="item"><b>${esc(u.name)}${u.id === me.id ? " (sen)" : ""}</b>
+      <small>${u.role === "manager" ? "Yönetici" : "Personel"}${u.tokens && u.tokens.length ? " · Bildirim açık" : " · Bildirim kapalı"}</small>
+      <div class="row"><span class="pill">${open.length} açık görev</span>${red ? `<span class="pill hot">${red} kırmızı</span>` : ""}</div>
+      ${u.id !== me.id ? `<div class="links"><button class="lnk danger" data-deluser="${esc(u.id)}">Kişiyi sil</button></div>` : ""}</div>`;
+  }).join("") || `<div class="empty"><b>Kimse yok</b>Adresi paylaş; giriş yapan kişiler burada görünür.</div>`;
 }
-$("#peopleBtn").onclick = () => { drawPeople(); $("#dlgPeople").showModal(); };
-async function deleteUser(u) {
-  if (!u) return;
-  const open = tasks.filter(t => t.assigneeId === u.id && t.status !== "done");
-  if (!confirm(`${u.name} silinsin mi?` + (open.length ? `\n${open.length} açık görevi de silinecek.` : ""))) return;
+$("#teamList").onclick = async e => {
+  const b = e.target.closest("[data-deluser]"); if (!b) return;
+  const u = users.find(x => x.id === b.dataset.deluser); if (!u) return;
+  const nOpen = [...openMap.values()].filter(t => t.assigneeId === u.id).length;
+  if (!confirm(`${u.name} silinsin mi?` + (nOpen ? `\n${nOpen} açık görevi silinecek.` : "") + "\nTamamlanmış görevler kayıtta kalır.")) return;
   try {
-    const b = writeBatch(db);
-    b.delete(doc(db, "users", u.id));
-    open.forEach(t => b.delete(doc(db, "tasks", t.id)));
-    await b.commit();
-    toast(`${u.name} silindi.`);
-  } catch (e) { showErr(e); }
-}
+    const ts = await getDocs(query(collection(db, "tasks"), where("assigneeId", "==", u.id)));
+    const bt = writeBatch(db);
+    bt.delete(doc(db, "users", u.id));
+    ts.docs.filter(d => d.data().status !== "done").forEach(d => { bt.delete(d.ref); bt.delete(doc(db, "photos", d.id)); });
+    await bt.commit(); toast(`${u.name} silindi.`);
+  } catch (err) { showErr(err); }
+};
+$("#invite").onclick = async () => {
+  const url = location.origin + location.pathname;
+  if (navigator.share) { try { await navigator.share({ title: "Bakım Görevleri", text: "Bakım görevleri uygulaması:", url }); return; } catch (e) { if (e.name === "AbortError") return; } }
+  try { await navigator.clipboard.writeText(url); toast("Adres kopyalandı."); } catch { prompt("Adresi kopyalayın:", url); }
+};
 
-/* Başlat */
+/* ---------- Rapor ---------- */
+let rpKey = "month", rpRows = [];
+function rpRange() {
+  const n = new Date(), y = n.getFullYear(), m = n.getMonth();
+  if (rpKey === "month") return [iso(new Date(y, m, 1)), iso(new Date(y, m + 1, 0))];
+  if (rpKey === "prev") return [iso(new Date(y, m - 1, 1)), iso(new Date(y, m, 0))];
+  if (rpKey === "week") return [shift(today(), -6), today()];
+  return [$("#rpFrom").value, $("#rpTo").value];
+}
+function fillReportWho() {
+  const v = $("#rpWho").value || "all";
+  $("#rpWho").innerHTML = `<option value="all">Herkes</option>` + users.map(u => `<option value="${esc(u.id)}">${esc(u.name)}</option>`).join("");
+  $("#rpWho").value = users.some(u => u.id === v) ? v : "all";
+}
+$("#rpChips").onclick = e => {
+  const c = e.target.closest("[data-p]"); if (!c) return;
+  rpKey = c.dataset.p;
+  $$("#rpChips .chip").forEach(x => x.setAttribute("aria-pressed", x === c));
+  $("#rpCustom").hidden = rpKey !== "custom";
+  if (rpKey === "custom" && !$("#rpFrom").value) { $("#rpFrom").value = shift(today(), -30); $("#rpTo").value = today(); }
+  loadReport();
+};
+$("#rpFrom").onchange = $("#rpTo").onchange = () => loadReport();
+$("#rpWho").onchange = () => drawReport();
+async function loadReport() {
+  const [from, to] = rpRange();
+  if (!from || !to || from > to) { $("#rpBody").innerHTML = `<p class="mut">Geçerli bir tarih aralığı seçin.</p>`; $("#rpXls").disabled = true; return; }
+  $("#rpBody").innerHTML = `<p class="mut">Yükleniyor…</p>`; $("#rpXls").disabled = true;
+  try {
+    const s = await getDocs(query(collection(db, "tasks"), where("date", ">=", from), where("date", "<=", to)));
+    rpRows = s.docs.map(d => ({ id: d.id, ...d.data() })).sort((a, b) => a.date.localeCompare(b.date));
+    drawReport();
+  } catch (e) { $("#rpBody").innerHTML = `<p class="mut">Rapor yüklenemedi: ${esc(e.message)}</p>`; }
+}
+const rpFiltered = () => { const w = $("#rpWho").value; return w && w !== "all" ? rpRows.filter(t => t.assigneeId === w) : rpRows; };
+const onTime = t => t.status === "done" && (t.doneDay || t.date) <= t.date;
+function rpStatus(t) { return t.status === "done" ? "Tamamlandı" : t.status === "blocked" ? "Yapılamadı" : t.date < today() ? "Gecikmiş" : "Açık"; }
+function drawReport() {
+  const rows = rpFiltered(), done = rows.filter(t => t.status === "done"), ot = done.filter(onTime).length;
+  const late = rows.filter(t => t.status !== "done" && t.date < today()).length, blocked = rows.filter(t => t.status === "blocked").length;
+  const pct = done.length ? Math.round(ot / done.length * 100) + "%" : "–";
+  const people = {};
+  rows.forEach(t => { const p = people[t.assigneeId] ||= { name: t.assigneeName, all: 0, done: 0, ot: 0, late: 0 };
+    p.all++; if (t.status === "done") { p.done++; if (onTime(t)) p.ot++; } else if (t.date < today()) p.late++; });
+  const [from, to] = rpRange();
+  $("#rpBody").innerHTML = `<p class="mut" style="margin:0 0 8px">${fmt(from)} – ${fmt(to)}</p>
+    <div class="tiles">
+      <div class="tile"><b>${rows.length}</b><span>Toplam görev</span></div>
+      <div class="tile g"><b>${done.length}</b><span>Tamamlanan</span></div>
+      <div class="tile g"><b>${pct}</b><span>Zamanında</span></div>
+      <div class="tile"><b>${rows.length - done.length}</b><span>Kalan</span></div>
+      <div class="tile r"><b>${late}</b><span>Gecikmiş</span></div>
+      <div class="tile a"><b>${blocked}</b><span>Sorunlu</span></div>
+    </div>
+    ${rows.length ? `<div class="tblwrap"><table><thead><tr><th>Kişi</th><th class="n">Görev</th><th class="n">Biten</th><th class="n">Zamanında</th><th class="n">Gecikmiş</th></tr></thead><tbody>
+      ${Object.values(people).sort((a, b) => b.all - a.all).map(p => `<tr><td>${esc(p.name)}</td><td class="n">${p.all}</td><td class="n">${p.done}</td><td class="n">${p.ot}</td><td class="n">${p.late}</td></tr>`).join("")}
+    </tbody></table></div>` : `<div class="empty"><b>Bu aralıkta görev yok</b>Başka bir tarih aralığı seçin.</div>`}`;
+  $("#rpXls").disabled = !rows.length;
+}
+function loadXLSX() {
+  if (window.XLSX) return Promise.resolve();
+  return new Promise((res, rej) => { const s = document.createElement("script"); s.src = "https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js";
+    s.onload = res; s.onerror = () => rej(new Error("Excel aracı yüklenemedi. İnterneti kontrol edin.")); document.head.appendChild(s); });
+}
+$("#rpXls").onclick = async () => {
+  try {
+    $("#rpXls").disabled = true; await loadXLSX();
+    const rows = rpFiltered(), [from, to] = rpRange();
+    const data = rows.map(t => ({ "Tarih": fmt(t.date), "Makine": t.machineName || "", "Görev": t.title, "Kişi": t.assigneeName, "Öncelik": t.priority === "high" ? "Acil" : "Normal",
+      "Durum": rpStatus(t), "Tamamlanma": fmtTs(t.doneAt) || fmt(t.doneDay), "Tamamlayan": t.doneByName || "", "Zamanında": t.status === "done" ? (onTime(t) ? "Evet" : "Hayır") : "",
+      "Açıklama": t.status === "done" ? (t.doneNote || "") : t.status === "blocked" ? (t.blockedReason || "") : "" }));
+    const ws = XLSX.utils.json_to_sheet(data);
+    ws["!cols"] = [10, 16, 45, 18, 9, 12, 17, 18, 10, 45].map(w => ({ wch: w }));
+    const people = {};
+    rows.forEach(t => { const p = people[t.assigneeId] ||= { "Kişi": t.assigneeName, "Görev": 0, "Biten": 0, "Zamanında": 0, "Gecikmiş": 0, "Sorunlu": 0 };
+      p["Görev"]++; if (t.status === "done") { p["Biten"]++; if (onTime(t)) p["Zamanında"]++; } else { if (t.date < today()) p["Gecikmiş"]++; if (t.status === "blocked") p["Sorunlu"]++; } });
+    const ws2 = XLSX.utils.json_to_sheet(Object.values(people)); ws2["!cols"] = [22, 8, 8, 11, 10, 9].map(w => ({ wch: w }));
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Görevler"); XLSX.utils.book_append_sheet(wb, ws2, "Kişi özeti");
+    XLSX.writeFile(wb, `bakim-raporu_${from}_${to}.xlsx`);
+  } catch (e) { showErr(e); }
+  $("#rpXls").disabled = false;
+};
+
+/* ---------- Başlat ---------- */
 function start() {
   if (started) return; started = true;
-  const mgr = me.role === "manager";
+  const mgr = isMgr();
   $("#login").hidden = true; $("#app").hidden = false;
   document.body.classList.toggle("mgr", mgr);
   $("#hi").textContent = me.name + (mgr ? " · Yönetici" : "");
-  $("#dock").hidden = !mgr;
-  const q = mgr ? collection(db, "tasks") : query(collection(db, "tasks"), where("assigneeId", "==", me.id));
-  onSnapshot(q, s => { tasks = s.docs.map(d => ({ id: d.id, ...d.data() })); render(); }, showErr);
-  if (mgr) onSnapshot(collection(db, "users"), s => {
-    users = s.docs.map(d => ({ id: d.id, ...d.data() })).filter(u => u.role !== "manager")
-      .sort((a, b) => (a.name || "").localeCompare(b.name || "", "tr"));
-    if ($("#dlgNew").open) drawWho();
-    if ($("#dlgPeople").open) drawPeople();
-  }, showErr);
+  $("#nav").hidden = !mgr; $("#fab").hidden = !mgr;
+  const tasksCol = collection(db, "tasks");
+  if (mgr) {
+    onSnapshot(query(tasksCol, where("status", "in", ["open", "blocked"])), s => { openMap = new Map(s.docs.map(d => [d.id, { id: d.id, ...d.data() }])); render(); }, showErr);
+    onSnapshot(query(tasksCol, where("doneDay", ">=", shift(today(), -31))), s => { doneMap = new Map(s.docs.map(d => [d.id, { id: d.id, ...d.data() }])); render(); }, showErr);
+    onSnapshot(collection(db, "users"), s => {
+      users = s.docs.map(d => ({ id: d.id, ...d.data() })).filter(u => u.name).sort((a, b) => a.name.localeCompare(b.name, "tr"));
+      if ($("#dlgTask").open) drawSheet();
+      if (view === "report") fillReportWho();
+      render();
+    }, showErr);
+    onSnapshot(collection(db, "machines"), s => { machines = s.docs.map(d => ({ id: d.id, ...d.data() })).sort((a, b) => a.name.localeCompare(b.name, "tr")); render(); }, showErr);
+  } else {
+    onSnapshot(query(tasksCol, where("assigneeId", "==", me.id)), s => { staffTasks = s.docs.map(d => ({ id: d.id, ...d.data() })); render(); }, showErr);
+  }
+  /* Kişi silinirse bu cihaz çıkış yapar */
   onSnapshot(doc(db, "users", me.id), s => {
-    if (!s.exists() && !s.metadata.fromCache) { localStorage.removeItem("me"); location.reload(); }
+    if (!s.exists() && !s.metadata.fromCache) { localStorage.removeItem("me"); localStorage.removeItem("fcmToken"); alert("Hesabınız yönetici tarafından kaldırıldı. Tekrar giriş yapabilirsiniz."); location.reload(); }
   });
-  if ("Notification" in window && Notification.permission === "granted") enableNotifs(true);
-  else $("#bell").hidden = false;
+  notifState();
+  setInterval(() => { if (today() !== lastDay) { lastDay = today(); render(); } }, 60000);
+  document.addEventListener("visibilitychange", () => { if (!document.hidden) { lastDay = today(); render(); } });
   render();
 }
 if (me) start(); else $("#login").hidden = false;

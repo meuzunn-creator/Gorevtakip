@@ -1,37 +1,73 @@
-# Makine Bakım Görevleri (telefona kurulan web uygulaması)
+# Makine Bakım Görevleri
 
-Yönetici telefondan görev yazar → personele anında bildirim gider. Yapılmamış görevi olan herkese
-**08:00, 11:00 ve 15:00**'te hatırlatma gider. Personel "Yapıldı" der (açıklama zorunlu) → o görev bildirimden çıkar.
+Telefona kurulan bakım takip uygulaması. Yönetici görev yazar, personele bildirim gider. Personel işi bitirince
+açıklama (ve isterse fotoğraf) yazarak kapatır, yapamazsa sebebini bildirir.
 
-## 1) Firebase (ücretsiz, tek seferlik)
-1. https://console.firebase.google.com → **Proje ekle**.
-2. **Build > Firestore Database > Create database** → konum **eur3 (Europe)**.
-3. **Proje ayarları (⚙) > Genel > Uygulamalarınız > Web (</>)** → uygulama ekle → çıkan `apiKey, authDomain, projectId, messagingSenderId, appId` değerlerini `config.js` içine yapıştır.
-4. **Proje ayarları > Cloud Messaging > Web Push sertifikaları > Anahtar çifti oluştur** → anahtarı `config.js` içindeki `vapidKey` alanına yapıştır.
-5. `config.js` içinde `managerPin` değerini değiştir.
-6. Zamanlanmış bildirim için planı **Blaze**'e geçir (kredi kartı ister; bu kullanım ücretsiz kotanın çok altındadır, yine de bütçe uyarısı koyabilirsin).
+## Neler var
+- **Görevler:** Açık / Sorunlu / Biten sekmeleri, kişiye göre filtre, kendine görev atama.
+- **Kırmızı görevler:** Tarihi geçen ve yapılmayan görev otomatik kırmızı olur. Yönetici istediği görevi
+  "Kırmızı yap" ile veya görev yazarken "Acil" seçerek kırmızıya çevirir. Kırmızılar listenin en üstünde durur.
+- **Yapıldı:** Açıklama zorunlu, fotoğraf isteğe bağlı. **Yapamadım:** Sebep yazılır, yöneticiye bildirim gider.
+- **Yönetici işlemleri:** Düzenle (kişi, tarih, makine, öncelik), Kapat, Tekrar aç, Sil.
+- **Makineler:** Makine listesi ve her makinenin tüm bakım geçmişi.
+- **Ekip:** Kayıtlı kişiler, bildirim durumu, kişi silme, adres paylaşma.
+- **Rapor:** Bu ay, geçen ay, son 7 gün veya seçilen tarih aralığı; kişi bazında özet; **Excel’e aktar**.
+- İnternet yokken de açılır; yapılan işlemler internet gelince gönderilir.
 
-## 2) Sunucu kodunu yükle (bilgisayarda, Node.js 20 kurulu olmalı)
+## Dosyalar
+```
+index.html                 uygulama
+config.js                  SENİN Firebase bilgilerin (GitHub'dakini SİLME/DEĞİŞTİRME)
+config.ornek.js            boş örnek (sadece ilk kurulumda gerekir)
+firebase-messaging-sw.js   bildirim + çevrimdışı çalışma
+manifest.json              telefona kurulum bilgisi
+icons/icon-192.png, icons/icon-512.png
+firestore.rules            veritabanı kuralları
+firebase.json, functions/  sunucu kodu (bildirimler, hatırlatma)
+```
+
+## 1) GitHub’ı güncelle
+GitHub reposuna şu dosyaları yükle ve eskilerin üzerine yaz: `index.html`, `firebase-messaging-sw.js`,
+`manifest.json`, `icons/` klasörü. **`config.js`’e dokunma**, içinde senin Firebase bilgilerin var.
+1–2 dakika sonra uygulamayı telefonda kapatıp yeniden aç.
+
+## 2) Veritabanı kurallarını yayınla (zorunlu)
+Firebase konsolu → **Firestore** → **Rules** → içindekileri sil → `firestore.rules` dosyasının içeriğini
+yapıştır → **Publish**.
+
+## 3) Bildirimler ve hatırlatmalar (sunucu kodu)
+Bunlar için proje **Blaze** planında olmalı (konsolda sol alttaki **Upgrade**). Kredi kartı ister;
+bu kullanım ücretsiz kotanın çok altında kalır. Yine de **Bütçe uyarısı** (ör. 1 $) kurman önerilir.
+
+Bilgisayarda **Node.js 22** kurulu olmalı (nodejs.org). Sonra bu klasörde:
 ```
 npm i -g firebase-tools
 firebase login
-firebase use --add        # projeni seç
+firebase use --add          # BakimGorev projesini seç
 cd functions && npm i && cd ..
 firebase deploy --only functions,firestore:rules
 ```
+> Konum notu: `functions/index.js` içindeki `REGION`, Firestore veritabanının konumuyla uyumlu olmalı.
+> Konum `europe-west1` veya `eur3` ise dokunma. `nam5` ise `us-central1` yaz. Başka bir tek bölgeyse
+> (ör. `europe-west3`) aynısını yaz. Konum, Firestore sayfasında veritabanı adının yanında görünür.
 
-## 3) GitHub'da yayınla
-1. Yeni (public) repo aç, bu klasörün içindekileri yükle (`config.js` dahil).
-2. **Settings > Pages > Branch: main / (root) > Save**.
-3. Adres: `https://KULLANICI.github.io/REPO/`
+Blaze olmadan da uygulama çalışır: görevler, kırmızı işaretler, fotoğraflar, makineler ve rapor
+kullanılabilir. Sadece telefona bildirim gelmez.
 
-## 4) Telefonlara kur
-- **Android (Chrome):** adresi aç → ⋮ menü → **Uygulamayı yükle / Ana ekrana ekle**.
-- **iPhone (Safari, iOS 16.4+):** adresi aç → **Paylaş → Ana Ekrana Ekle** → uygulamayı ana ekrandan aç.
-- Açılışta adını yaz, **Personel** seç → **🔔 Bildirimleri aç** → İzin ver.
-- Sen **Yönetici** seç + PIN gir. Personel en az bir kez giriş yaptıktan sonra görev atayabilirsin (adı listede görünür).
+## Zamanlama
+- Hatırlatma: her gün **08:00, 11:00, 15:00** (bugünkü, gecikmiş ve acil görevler). 08:00’de yöneticilere
+  gecikmiş/sorunlu özeti gider. Değiştirmek için `functions/index.js` → `"0 8,11,15 * * *"`.
+Değişiklikten sonra: `firebase deploy --only functions`.
 
-## Notlar
-- Saatleri değiştirmek: `functions/index.js` içindeki `"0 8,11,15 * * *"` (yeniden `firebase deploy --only functions`).
-- Güvenlik basit tutuldu: PIN uygulama içinde kontrol edilir, veritabanı kuralları açıktır. Küçük iç ekip için uygundur; adresi paylaşmayın.
-- Bildirimler uygulama kapalıyken de gelir; telefonda pil tasarrufu uygulamayı kısıtlıyorsa uygulamayı "kısıtlama yok" yapın.
+## Telefona kurulum
+- **Android (Chrome):** adresi aç → ⋮ → **Uygulamayı yükle**.
+- **iPhone (Safari, iOS 16.4+):** **Paylaş → Ana Ekrana Ekle** → uygulamayı ana ekrandan aç
+  (iPhone’da bildirim sadece böyle çalışır).
+- Adını yaz, rolünü seç, **Bildirimleri aç**.
+
+## Bilinmesi gerekenler
+- Yönetici PIN’i `config.js` içindedir. Repo herkese açıksa PIN, adresi bilen biri tarafından görülebilir;
+  adresi ekip dışına paylaşma.
+- Kişiler isimleriyle tanınır: aynı kişi adını her girişte aynı yazmalı.
+- Silinen kişi tekrar giriş yaparsa listeye geri gelir.
+- Fotoğraflar küçültülerek saklanır (yaklaşık 100–500 KB).

@@ -6,62 +6,218 @@
 <link rel="manifest" href="manifest.json">
 <link rel="apple-touch-icon" href="icons/icon-192.png">
 <meta name="theme-color" content="#1f3864">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700&family=Barlow+Condensed:wght@600;700&display=swap" rel="stylesheet">
 <style>
-:root{--navy:#1f3864;--bg:#eef1f8;--tx:#1b2330;--mut:#667085;--red:#c00000}
+:root{
+  --navy:#1f3864;--yellow:#f2c200;--yellow-ink:#1f2a12;
+  --bg:#e8ecf2;--surface:#fff;--ink:#18212f;--mut:#5b6678;--line:#d4dae4;
+  --red:#c62828;--green:#2e7d4f;--green-bg:#e6f3ea;--tint:#e3e9f4;
+  --font:"Barlow",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  --cond:"Barlow Condensed","Arial Narrow",system-ui,sans-serif;
+  color-scheme:light;
+}
+@media (prefers-color-scheme:dark){:root{
+  --bg:#0f1622;--surface:#182233;--ink:#e6ebf2;--mut:#9aa6b8;--line:#2a3649;
+  --green-bg:#183026;--tint:#22304a;color-scheme:dark;
+}}
 *{box-sizing:border-box}
-body{margin:0;font:16px/1.4 system-ui,sans-serif;background:var(--bg);color:var(--tx)}
-header{background:var(--navy);color:#fff;padding:calc(12px + env(safe-area-inset-top)) 16px 12px;display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;z-index:2}
-main,#login{max-width:640px;margin:0 auto;padding:16px}
-h1{color:var(--navy)}
-h2{font-size:16px;color:var(--navy);margin:22px 0 8px}
-input,select,textarea,button{font:inherit;width:100%;padding:12px;margin:0 0 10px;border:1px solid #c5cde0;border-radius:8px;background:#fff;color:var(--tx)}
-button{background:var(--navy);color:#fff;border:0;font-weight:600}
-button:disabled{opacity:.4}
-button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{outline:3px solid #f2c200;outline-offset:1px}
-.task{background:#fff;border-radius:8px;padding:12px;margin-bottom:10px;border-left:6px solid #94a3b8}
-.task.late{background:#fde8e8;border-color:var(--red)}
-.task.today{background:#fff6c2;border-color:#e0b000}
-.task.done{background:#e5f4e8;border-color:#2e9e4f}
-.meta{font-size:14px;color:var(--mut);margin-bottom:4px}
-.late .meta{color:var(--red);font-weight:600}
-.note{margin-top:6px;font-size:15px}
-.task button{width:auto;padding:8px 16px;margin:8px 8px 0 0}
-.task .del{background:#fff;color:var(--red);border:1px solid var(--red)}
-.mut{color:var(--mut)}
-dialog{border:0;border-radius:12px;width:min(92vw,420px);padding:16px}
-dialog .sec{background:#e5e7eb;color:var(--tx)}
+html,body{margin:0}
+body{font:17px/1.45 var(--font);background:var(--bg);color:var(--ink);-webkit-tap-highlight-color:transparent}
+button,input,textarea{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:3px solid var(--yellow);outline-offset:2px}
+[hidden]{display:none!important}
+
+/* Giriş */
+#login{min-height:100vh;background:var(--navy);color:#fff;display:flex;align-items:center;justify-content:center;
+  padding:calc(24px + env(safe-area-inset-top)) 20px calc(24px + env(safe-area-inset-bottom))}
+.login-box{width:100%;max-width:400px}
+.mark{width:56px;height:56px;border-radius:14px;background:var(--yellow);display:grid;place-items:center;margin-bottom:20px}
+.mark svg{width:32px;height:32px}
+#login h1{font:700 40px/1 var(--cond);margin:0 0 6px}
+#login .sub{margin:0 0 32px;color:#c3cde0}
+label.f{display:block;font-weight:600;margin:0 0 6px}
+.inp{width:100%;padding:14px;border-radius:10px;border:1px solid var(--line);background:var(--surface);color:var(--ink);margin:0 0 18px;min-height:52px}
+#login .inp{border:0}
+.seg{display:grid;grid-template-columns:1fr 1fr;gap:6px;background:rgba(255,255,255,.1);padding:5px;border-radius:12px;margin:0 0 18px}
+.seg button{border:0;background:transparent;color:#fff;padding:12px;border-radius:9px;font-weight:600;min-height:48px}
+.seg button[aria-pressed="true"]{background:#fff;color:var(--navy)}
+.hint{font-size:15px;color:#c3cde0;margin:14px 0 0}
+.btn{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;min-height:54px;border:0;border-radius:12px;font-weight:700;font-size:18px;padding:12px 18px}
+.btn.primary{background:var(--yellow);color:var(--yellow-ink)}
+.btn.navy{background:var(--navy);color:#fff}
+.btn.ok{background:var(--green);color:#fff}
+.btn.ghost{background:transparent;color:var(--mut);font-weight:600}
+.btn:disabled{opacity:.4}
+
+/* Üst bölüm */
+header{background:var(--navy);color:#fff;padding:env(safe-area-inset-top) 0 0;position:sticky;top:0;z-index:5}
+.bar{max-width:640px;margin:0 auto;display:flex;align-items:center;gap:12px;padding:12px 16px}
+.bar .mark{width:34px;height:34px;border-radius:9px;margin:0;flex:none}
+.bar .mark svg{width:20px;height:20px}
+.bar .t{flex:1;min-width:0}
+.bar .t b{display:block;font:700 21px/1.1 var(--cond)}
+.bar .t span{font-size:14px;color:#c3cde0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:block}
+#out{background:#fff;border:0;color:var(--navy);border-radius:10px;padding:8px 16px;font-weight:700;font-size:15px;min-height:42px;flex:none}
+.stats{max-width:640px;margin:0 auto;display:grid;grid-template-columns:repeat(3,1fr);gap:8px;padding:0 16px 14px}
+.stat{background:rgba(255,255,255,.08);border-radius:10px;padding:8px 12px}
+.stat b{display:block;font:700 30px/1 var(--cond)}
+.stat span{font-size:14px;color:#c3cde0;display:flex;align-items:center;gap:6px}
+.stat i{width:9px;height:9px;border-radius:50%;display:inline-block}
+
+main{max-width:640px;margin:0 auto;padding:16px 16px calc(24px + env(safe-area-inset-bottom))}
+body.mgr main{padding-bottom:calc(104px + env(safe-area-inset-bottom))}
+
+.notice{display:flex;gap:12px;align-items:center;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:12px 14px;margin-bottom:16px}
+.notice p{margin:0;flex:1;font-size:15px;color:var(--mut)}
+.notice p b{display:block;color:var(--ink);font-size:16px}
+.notice button{flex:none;border:0;background:var(--navy);color:#fff;border-radius:10px;padding:10px 14px;font-weight:600}
+
+.tabs{display:grid;grid-template-columns:1fr 1fr;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:4px;margin-bottom:14px}
+.tabs button{border:0;background:transparent;padding:11px;border-radius:9px;font-weight:600;color:var(--mut);min-height:46px}
+.tabs button[aria-selected="true"]{background:var(--navy);color:#fff}
+.tabs em{font-style:normal;opacity:.75;margin-left:4px}
+
+/* Görev kartı: solda iş emri tarih damgası */
+.task{display:grid;grid-template-columns:66px 1fr;background:var(--surface);border:1px solid var(--line);border-radius:12px;overflow:hidden;margin-bottom:10px}
+.day{background:var(--tint);color:var(--navy);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:10px 4px;text-align:center}
+@media (prefers-color-scheme:dark){.day{color:#c9d5ee}}
+.day b{font:700 32px/1 var(--cond)}
+.day span{font:600 15px/1.2 var(--cond)}
+.task.late .day{background:var(--red);color:#fff}
+.task.today .day{background:var(--yellow);color:var(--yellow-ink)}
+.task.done .day{background:var(--green-bg);color:var(--green)}
+.task.late{border-color:var(--red)}
+.body{padding:12px 14px;min-width:0}
+.row{display:flex;flex-wrap:wrap;gap:6px 10px;align-items:center;margin-bottom:4px;font-size:14px}
+.tag{font-weight:700;color:var(--mut)}
+.late .tag{color:var(--red)}
+.today .tag{color:var(--ink)}
+.done .tag{color:var(--green)}
+.who{background:var(--tint);border-radius:6px;padding:1px 8px;font-weight:600}
+.title{margin:0;font-size:18px;font-weight:500;overflow-wrap:anywhere;white-space:pre-wrap}
+.done .title{color:var(--mut)}
+.note{margin-top:10px;background:var(--green-bg);border-radius:8px;padding:8px 10px;font-size:16px;overflow-wrap:anywhere;white-space:pre-wrap}
+.note span{display:block;font-size:13px;font-weight:700;color:var(--green)}
+.note small{display:block;color:var(--mut);margin-top:4px;font-size:13px}
+.acts{display:flex;gap:8px;align-items:center;margin-top:12px}
+.acts:empty{display:none}
+.acts .btn{min-height:50px;font-size:17px}
+.del{border:0;background:transparent;color:var(--red);font-weight:600;padding:10px 6px;margin-left:auto;flex:none}
+
+.empty{text-align:center;padding:36px 16px;color:var(--mut)}
+.empty b{display:block;color:var(--ink);font:700 22px/1.2 var(--cond);margin-bottom:4px}
+
+.dock{position:fixed;left:0;right:0;bottom:0;z-index:4;background:var(--bg);border-top:1px solid var(--line);
+  padding:12px 16px calc(12px + env(safe-area-inset-bottom))}
+.dock .btn{max-width:608px;margin:0 auto}
+
+dialog{border:0;padding:0;margin:auto auto 0;width:100%;max-width:560px;max-height:92vh;border-radius:18px 18px 0 0;background:var(--surface);color:var(--ink)}
+dialog::backdrop{background:rgba(10,18,32,.55)}
+dialog[open]{animation:up .2s ease-out}
+@keyframes up{from{transform:translateY(24px);opacity:.6}}
+@media (prefers-reduced-motion:reduce){dialog[open]{animation:none}}
+.sheet{padding:10px 18px calc(18px + env(safe-area-inset-bottom))}
+.grip{width:42px;height:5px;border-radius:3px;background:var(--line);margin:0 auto 14px}
+.sheet h3{font:700 26px/1.1 var(--cond);margin:0 0 4px}
+.sheet .lead{margin:0 0 16px;color:var(--mut);font-size:15px;overflow-wrap:anywhere}
+.chips{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 18px}
+.chip{border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:10px 16px;font-weight:600;min-height:46px}
+.chip[aria-pressed="true"]{background:var(--navy);border-color:var(--navy);color:#fff}
+.chips .none{color:var(--mut);font-size:15px;margin:0}
+textarea.inp{resize:vertical;min-height:110px}
+.sheet .btn+.btn{margin-top:6px}
+
+#toast{position:fixed;left:50%;bottom:calc(96px + env(safe-area-inset-bottom));transform:translateX(-50%);z-index:20;
+  background:var(--ink);color:var(--bg);padding:12px 18px;border-radius:10px;font-weight:600;max-width:calc(100% - 32px);text-align:center;box-shadow:0 6px 20px rgba(0,0,0,.25)}
+#toast.bad{background:var(--red);color:#fff}
 </style></head><body>
 
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><symbol id="chk" viewBox="0 0 24 24"><path d="M4 12.5l5 5L20 6.5" fill="none" stroke="#1f3864" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/></symbol></svg>
+
 <section id="login" hidden>
-  <h1>Makine Bakım Görevleri</h1>
-  <input id="name" placeholder="Adınız Soyadınız" autocomplete="name">
-  <select id="role"><option value="staff">Personel</option><option value="manager">Yönetici</option></select>
-  <input id="pin" type="password" placeholder="Yönetici PIN" hidden>
-  <button id="go">Başla</button>
+  <div class="login-box">
+    <div class="mark"><svg><use href="#chk"/></svg></div>
+    <h1>Bakım Görevleri</h1>
+    <p class="sub">Makine bakım ekibinin görev listesi</p>
+    <label class="f" for="name">Adınız soyadınız</label>
+    <input id="name" class="inp" autocomplete="name" placeholder="Örn. Ahmet Yılmaz">
+    <div class="seg" role="group" aria-label="Rol">
+      <button type="button" data-role="staff" aria-pressed="true">Personel</button>
+      <button type="button" data-role="manager" aria-pressed="false">Yönetici</button>
+    </div>
+    <div id="pinWrap" hidden>
+      <label class="f" for="pin">Yönetici PIN</label>
+      <input id="pin" class="inp" type="password" inputmode="numeric" autocomplete="off">
+    </div>
+    <button id="go" class="btn primary">Giriş yap</button>
+    <p class="hint">Adınızı her girişte aynı yazın; görevleriniz bu isimle eşleşir.</p>
+  </div>
 </section>
 
 <div id="app" hidden>
-  <header><b id="hi"></b><span>Makine Bakım</span></header>
-  <main>
-    <button id="bell" hidden>🔔 Bildirimleri aç</button>
-    <div id="mgr" hidden>
-      <h2>Yeni görev</h2>
-      <select id="who"></select>
-      <input id="date" type="date">
-      <textarea id="title" rows="3" placeholder="Görev açıklaması"></textarea>
-      <button id="add">Görevi gönder</button>
+  <header>
+    <div class="bar">
+      <div class="mark"><svg><use href="#chk"/></svg></div>
+      <div class="t"><b>Bakım Görevleri</b><span id="hi"></span></div>
+      <button id="out">Çıkış</button>
     </div>
-    <h2>Açık görevler</h2><div id="open"></div>
-    <h2>Tamamlananlar</h2><div id="done"></div>
+    <div class="stats">
+      <div class="stat"><b id="nLate">0</b><span><i style="background:#ff6b6b"></i>Gecikmiş</span></div>
+      <div class="stat"><b id="nToday">0</b><span><i style="background:var(--yellow)"></i>Bugün</span></div>
+      <div class="stat"><b id="nOpen">0</b><span><i style="background:#fff"></i>Açık</span></div>
+    </div>
+  </header>
+  <main>
+    <div id="bell" class="notice" hidden>
+      <p><b>Bildirimler kapalı</b>Yeni görev gelince telefonuna haber verelim.</p>
+      <button id="bellBtn">Aç</button>
+    </div>
+    <div class="tabs" role="tablist">
+      <button role="tab" data-tab="open" aria-selected="true">Açık<em id="cOpen"></em></button>
+      <button role="tab" data-tab="done" aria-selected="false">Tamamlanan<em id="cDone"></em></button>
+    </div>
+    <div id="list"></div>
   </main>
+  <div class="dock" id="dock" hidden><button id="newBtn" class="btn primary">+ Yeni görev</button></div>
 </div>
 
-<dialog id="dlg">
-  <h3>Görev yapıldı</h3>
-  <textarea id="note" rows="4" placeholder="Ne yapıldı? Açıklama yazmak zorunlu"></textarea>
-  <button id="save" disabled>Kaydet</button>
-  <button id="cancel" class="sec">Vazgeç</button>
+<dialog id="dlgNew">
+  <div class="sheet">
+    <div class="grip"></div>
+    <h3>Yeni görev</h3>
+    <p class="lead">Seçtiğin kişiye hemen bildirim gider.</p>
+    <label class="f">Kime</label>
+    <div class="chips" id="whoChips"></div>
+    <label class="f">Ne zaman</label>
+    <div class="chips" id="dateChips">
+      <button type="button" class="chip" data-d="0">Bugün</button>
+      <button type="button" class="chip" data-d="1">Yarın</button>
+      <button type="button" class="chip" data-d="pick">Başka gün</button>
+    </div>
+    <input id="date" class="inp" type="date" hidden>
+    <label class="f" for="title">Görev</label>
+    <textarea id="title" class="inp" rows="3" placeholder="Örn. 3 numaralı presin yağını değiştir"></textarea>
+    <button id="add" class="btn navy">Görevi gönder</button>
+    <button class="btn ghost" data-close>Vazgeç</button>
+  </div>
 </dialog>
+
+<dialog id="dlgDone">
+  <div class="sheet">
+    <div class="grip"></div>
+    <h3>Görev yapıldı</h3>
+    <p class="lead" id="doneTitle"></p>
+    <label class="f" for="note">Ne yaptın?</label>
+    <textarea id="note" class="inp" rows="4" placeholder="Kısaca yaz, örn. Yağ değiştirildi, filtre temizlendi"></textarea>
+    <button id="save" class="btn ok" disabled>Kaydet</button>
+    <button class="btn ghost" data-close>Vazgeç</button>
+  </div>
+</dialog>
+
+<div id="toast" role="status" hidden></div>
 
 <script src="config.js"></script>
 <script type="module">
@@ -70,23 +226,51 @@ import { getFirestore, collection, doc, setDoc, addDoc, updateDoc, deleteDoc, on
 import { getMessaging, getToken, isSupported } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-messaging.js";
 
 const app = initializeApp(CFG.firebase), db = getFirestore(app);
-const $ = s => document.querySelector(s);
+const $ = s => document.querySelector(s), $$ = s => [...document.querySelectorAll(s)];
 const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
-const today = () => new Date().toLocaleDateString("sv-SE");
-const fmt = d => d.split("-").reverse().join(".");
-let me = JSON.parse(localStorage.getItem("me") || "null"), users = [], tasks = [], doneId;
+const MONTHS = ["Oca","Şub","Mar","Nis","May","Haz","Tem","Ağu","Eyl","Eki","Kas","Ara"];
+const DAYS = ["Pazar","Pazartesi","Salı","Çarşamba","Perşembe","Cuma","Cumartesi"];
+const iso = d => d.toLocaleDateString("sv-SE");
+const today = () => iso(new Date());
+const parse = s => new Date(s + "T12:00");
+const addDays = n => { const d = new Date(); d.setDate(d.getDate() + n); return iso(d); };
+const diff = (a, b) => Math.round((parse(a) - parse(b)) / 864e5);
+const fmtTs = ts => new Date(ts.seconds * 1000).toLocaleString("tr-TR", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" });
 
-$("#role").onchange = () => $("#pin").hidden = $("#role").value !== "manager";
+let me = JSON.parse(localStorage.getItem("me") || "null"), users = [], tasks = [];
+let role = "staff", tab = "open", doneId = null, pickWho = null, pickDate = null, started = false;
+
+function toast(msg, bad) {
+  const t = $("#toast"); t.textContent = msg; t.className = bad ? "bad" : ""; t.hidden = false;
+  clearTimeout(toast.h); toast.h = setTimeout(() => t.hidden = true, bad ? 5000 : 2600);
+}
+const showErr = e => toast("Veritabanına ulaşılamadı: " + e.message, true);
+
+/* Giriş */
+$$(".seg button").forEach(b => b.onclick = () => {
+  role = b.dataset.role;
+  $$(".seg button").forEach(x => x.setAttribute("aria-pressed", x === b));
+  $("#pinWrap").hidden = role !== "manager";
+});
 $("#go").onclick = async () => {
-  const name = $("#name").value.trim(), role = $("#role").value;
-  if (!name) return alert("Adınızı yazın.");
-  if (role === "manager" && $("#pin").value !== CFG.managerPin) return alert("PIN yanlış.");
-  me = { id: name.toLocaleLowerCase("tr").replace(/[^\p{L}\p{N}]+/gu, "-"), name, role };
-  localStorage.setItem("me", JSON.stringify(me));
-  await setDoc(doc(db, "users", me.id), { name, role }, { merge: true });
+  const name = $("#name").value.trim();
+  if (!name) return toast("Adınızı yazın.", true);
+  if (role === "manager" && $("#pin").value !== CFG.managerPin) return toast("PIN yanlış.", true);
+  const u = { id: name.toLocaleLowerCase("tr").replace(/[^\p{L}\p{N}]+/gu, "-"), name, role };
+  $("#go").disabled = true;
+  try {
+    await setDoc(doc(db, "users", u.id), { name, role }, { merge: true });
+  } catch (e) {
+    $("#go").disabled = false;
+    return toast("Giriş kaydedilemedi: " + e.message, true);
+  }
+  me = u; localStorage.setItem("me", JSON.stringify(me));
+  $("#go").disabled = false;
   start();
 };
+$("#out").onclick = () => { if (confirm("Çıkış yapılsın mı?")) { localStorage.removeItem("me"); location.reload(); } };
 
+/* Bildirimler */
 async function enableNotifs(silent) {
   try {
     if (!(await isSupported())) throw new Error("Bu tarayıcı bildirimi desteklemiyor");
@@ -96,63 +280,137 @@ async function enableNotifs(silent) {
     const token = await getToken(getMessaging(app), { vapidKey: CFG.vapidKey, serviceWorkerRegistration: reg });
     await setDoc(doc(db, "users", me.id), { tokens: arrayUnion(token) }, { merge: true });
     $("#bell").hidden = true;
+    if (!silent) toast("Bildirimler açıldı.");
   } catch (e) {
     if (!silent) alert("Bildirim açılamadı: " + e.message + "\niPhone'da önce Paylaş > Ana Ekrana Ekle yapıp uygulamayı ana ekrandan açın.");
   }
 }
-$("#bell").onclick = () => enableNotifs(false);
+$("#bellBtn").onclick = () => enableNotifs(false);
 
+/* Liste */
+function when(t) {
+  if (t.status === "done") return { cls: "done", txt: "Tamamlandı" };
+  const n = diff(t.date, today());
+  if (n < 0) return { cls: "late", txt: `${-n} gün gecikti` };
+  if (n === 0) return { cls: "today", txt: "Bugün" };
+  if (n === 1) return { cls: "", txt: "Yarın" };
+  return { cls: "", txt: DAYS[parse(t.date).getDay()] };
+}
 function card(t) {
-  const open = t.status !== "done", late = open && t.date < today(), now = open && t.date === today();
-  return `<div class="task ${!open ? "done" : late ? "late" : now ? "today" : ""}">
-    <div class="meta">${me.role === "manager" ? `<b>${esc(t.assigneeName)}</b> · ` : ""}${fmt(t.date)}${late ? " · Gecikmiş" : now ? " · Bugün" : ""}</div>
-    <div>${esc(t.title)}</div>
-    ${!open ? `<div class="note">✔ ${esc(t.doneNote)}</div>` : me.id === t.assigneeId ? `<button data-done="${t.id}">Yapıldı</button>` : ""}
-    ${me.role === "manager" ? `<button class="del" data-del="${t.id}">Sil</button>` : ""}
-  </div>`;
+  const w = when(t), d = parse(t.date), mgr = me.role === "manager";
+  const acts = (t.status !== "done" && me.id === t.assigneeId ? `<button class="btn ok" data-done="${esc(t.id)}">✓ Yapıldı</button>` : "")
+             + (mgr ? `<button class="del" data-del="${esc(t.id)}">Sil</button>` : "");
+  return `<article class="task ${w.cls}">
+    <div class="day"><b>${d.getDate()}</b><span>${MONTHS[d.getMonth()]}</span></div>
+    <div class="body">
+      <div class="row"><span class="tag">${w.txt}</span>${mgr ? `<span class="who">${esc(t.assigneeName)}</span>` : ""}</div>
+      <p class="title">${esc(t.title)}</p>
+      ${t.status === "done" ? `<div class="note"><span>Yapılan iş</span>${esc(t.doneNote)}${t.doneAt ? `<small>${fmtTs(t.doneAt)}</small>` : ""}</div>` : ""}
+      <div class="acts">${acts}</div>
+    </div></article>`;
 }
 function render() {
-  const list = me.role === "manager" ? tasks : tasks.filter(t => t.assigneeId === me.id);
+  const mgr = me.role === "manager";
+  const list = mgr ? tasks : tasks.filter(t => t.assigneeId === me.id);
   const open = list.filter(t => t.status !== "done").sort((a, b) => a.date.localeCompare(b.date));
   const done = list.filter(t => t.status === "done").sort((a, b) => (b.doneAt?.seconds || 0) - (a.doneAt?.seconds || 0));
-  $("#open").innerHTML = open.map(card).join("") || `<p class="mut">Açık görev yok.</p>`;
-  $("#done").innerHTML = done.map(card).join("") || `<p class="mut">Henüz tamamlanan yok.</p>`;
+  const td = today();
+  $("#nLate").textContent = open.filter(t => t.date < td).length;
+  $("#nToday").textContent = open.filter(t => t.date === td).length;
+  $("#nOpen").textContent = open.length;
+  $("#cOpen").textContent = open.length || "";
+  $("#cDone").textContent = done.length || "";
+  const show = tab === "open" ? open : done;
+  $("#list").innerHTML = show.length ? show.map(card).join("") : tab === "open"
+    ? (mgr ? `<div class="empty"><b>Açık görev yok</b>Yeni görev yazmak için alttaki butona dokun.</div>`
+           : `<div class="empty"><b>Açık görevin yok</b>Yeni görev gelince burada görünür.</div>`)
+    : `<div class="empty"><b>Henüz tamamlanan yok</b>Yapılan görevler açıklamasıyla burada listelenir.</div>`;
 }
-
-document.addEventListener("click", e => {
-  const d = e.target.dataset || {};
-  if (d.done) { doneId = d.done; $("#note").value = ""; $("#save").disabled = true; $("#dlg").showModal(); }
-  if (d.del && confirm("Görev silinsin mi?")) deleteDoc(doc(db, "tasks", d.del));
+$$(".tabs button").forEach(b => b.onclick = () => {
+  tab = b.dataset.tab;
+  $$(".tabs button").forEach(x => x.setAttribute("aria-selected", x === b));
+  render();
 });
+
+/* Kart butonları */
+document.addEventListener("click", async e => {
+  const done = e.target.closest("[data-done]"), del = e.target.closest("[data-del]");
+  if (done) {
+    doneId = done.dataset.done;
+    const t = tasks.find(x => x.id === doneId);
+    $("#doneTitle").textContent = t ? t.title : "";
+    $("#note").value = ""; $("#save").disabled = true;
+    $("#dlgDone").showModal(); $("#note").focus();
+  }
+  if (del && confirm("Bu görev silinsin mi?")) {
+    try { await deleteDoc(doc(db, "tasks", del.dataset.del)); toast("Görev silindi."); } catch (err) { showErr(err); }
+  }
+  if (e.target.closest("[data-close]")) e.target.closest("dialog").close();
+});
+$$("dialog").forEach(d => d.addEventListener("click", e => { if (e.target === d) d.close(); }));
+
 $("#note").oninput = e => $("#save").disabled = !e.target.value.trim();
-$("#cancel").onclick = () => $("#dlg").close();
 $("#save").onclick = async () => {
   const note = $("#note").value.trim();
   if (!note) return;
-  await updateDoc(doc(db, "tasks", doneId), { status: "done", doneNote: note, doneAt: serverTimestamp() });
-  $("#dlg").close();
+  $("#save").disabled = true;
+  try {
+    await updateDoc(doc(db, "tasks", doneId), { status: "done", doneNote: note, doneAt: serverTimestamp() });
+    $("#dlgDone").close(); toast("Görev tamamlandı olarak kaydedildi.");
+  } catch (e) { $("#save").disabled = false; showErr(e); }
 };
 
+/* Yeni görev */
+function drawWho() {
+  $("#whoChips").innerHTML = users.length
+    ? users.map(u => `<button type="button" class="chip" data-who="${esc(u.id)}" aria-pressed="${u.id === pickWho}">${esc(u.name)}</button>`).join("")
+    : `<p class="none">Henüz personel yok. Personel uygulamaya bir kez giriş yapınca burada görünür.</p>`;
+}
+function setDate(key) {
+  $$("#dateChips .chip").forEach(c => c.setAttribute("aria-pressed", c.dataset.d === key));
+  $("#date").hidden = key !== "pick";
+  if (key === "pick") { if (!$("#date").value) $("#date").value = addDays(2); pickDate = $("#date").value; }
+  else pickDate = addDays(+key);
+}
+$("#whoChips").onclick = e => { const c = e.target.closest("[data-who]"); if (c) { pickWho = c.dataset.who; drawWho(); } };
+$("#dateChips").onclick = e => { const c = e.target.closest("[data-d]"); if (c) setDate(c.dataset.d); };
+$("#date").onchange = e => pickDate = e.target.value || null;
+$("#newBtn").onclick = () => {
+  if (!users.some(u => u.id === pickWho)) pickWho = users.length === 1 ? users[0].id : null;
+  drawWho(); setDate("0"); $("#title").value = "";
+  $("#dlgNew").showModal();
+};
 $("#add").onclick = async () => {
-  const u = users.find(x => x.id === $("#who").value), title = $("#title").value.trim(), date = $("#date").value;
-  if (!u || !title || !date) return alert("Kişi, tarih ve görev açıklaması gerekli.");
-  await addDoc(collection(db, "tasks"), { title, date, assigneeId: u.id, assigneeName: u.name, status: "open", createdAt: serverTimestamp() });
-  $("#title").value = "";
+  const u = users.find(x => x.id === pickWho), title = $("#title").value.trim();
+  if (!u) return toast("Görevin kime verileceğini seç.", true);
+  if (!pickDate) return toast("Bir tarih seç.", true);
+  if (!title) return toast("Görevi yaz.", true);
+  $("#add").disabled = true;
+  try {
+    await addDoc(collection(db, "tasks"), { title, date: pickDate, assigneeId: u.id, assigneeName: u.name, status: "open", createdAt: serverTimestamp() });
+    $("#dlgNew").close(); toast(`Görev gönderildi: ${u.name}`);
+  } catch (e) { showErr(e); }
+  $("#add").disabled = false;
 };
 
+/* Başlat */
 function start() {
+  if (started) return; started = true;
+  const mgr = me.role === "manager";
   $("#login").hidden = true; $("#app").hidden = false;
-  $("#hi").textContent = me.name + (me.role === "manager" ? " (Yönetici)" : "");
-  $("#mgr").hidden = me.role !== "manager";
-  $("#date").value = today();
-  const q = me.role === "manager" ? collection(db, "tasks") : query(collection(db, "tasks"), where("assigneeId", "==", me.id));
-  onSnapshot(q, s => { tasks = s.docs.map(d => ({ id: d.id, ...d.data() })); render(); });
-  if (me.role === "manager") onSnapshot(collection(db, "users"), s => {
-    users = s.docs.map(d => ({ id: d.id, ...d.data() })).filter(u => u.role === "staff");
-    $("#who").innerHTML = users.map(u => `<option value="${u.id}">${esc(u.name)}</option>`).join("");
-  });
+  document.body.classList.toggle("mgr", mgr);
+  $("#hi").textContent = me.name + (mgr ? " · Yönetici" : "");
+  $("#dock").hidden = !mgr;
+  const q = mgr ? collection(db, "tasks") : query(collection(db, "tasks"), where("assigneeId", "==", me.id));
+  onSnapshot(q, s => { tasks = s.docs.map(d => ({ id: d.id, ...d.data() })); render(); }, showErr);
+  if (mgr) onSnapshot(collection(db, "users"), s => {
+    users = s.docs.map(d => ({ id: d.id, ...d.data() })).filter(u => u.role !== "manager")
+      .sort((a, b) => (a.name || "").localeCompare(b.name || "", "tr"));
+    if ($("#dlgNew").open) drawWho();
+  }, showErr);
   if ("Notification" in window && Notification.permission === "granted") enableNotifs(true);
   else $("#bell").hidden = false;
+  render();
 }
 if (me) start(); else $("#login").hidden = false;
 </script>

@@ -1,0 +1,7 @@
+{
+  "name": "bakim-bildirim",
+  "private": true,
+  "main": "run.js",
+  "engines": { "node": ">=20" },
+  "dependencies": { "firebase-admin": "^13.0.0" }
+}

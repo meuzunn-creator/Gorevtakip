@@ -50,6 +50,11 @@ label.f{display:block;font-weight:600;margin:0 0 6px}
 .seg button{border:0;background:transparent;color:#fff;padding:12px;border-radius:9px;font-weight:600;min-height:48px}
 .seg button[aria-pressed="true"]{background:#fff;color:var(--navy)}
 .hint{font-size:15px;color:#c3cde0;margin:14px 0 0}
+.pw{position:relative}
+.pw .inp{padding-right:78px}
+.pw button{position:absolute;right:6px;top:6px;height:38px;border:0;border-radius:8px;background:transparent;color:var(--mut);font-weight:600;padding:0 10px}
+#login .pw button{color:#4a5568}
+.err{background:#fdecec;color:#8a1c1c;border-radius:10px;padding:10px 12px;margin:0 0 14px;font-size:15px;font-weight:600}
 .btn{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;min-height:52px;border:0;border-radius:12px;font-weight:700;font-size:17px;padding:12px 16px}
 .btn.primary{background:var(--yellow);color:var(--yellow-ink)}
 .btn.navy{background:var(--navy);color:#fff}
@@ -208,18 +213,30 @@ body.mgr #toast{bottom:calc(140px + env(safe-area-inset-bottom))}
     <div class="mark"><svg><use href="#chk"/></svg></div>
     <h1>Bakım Görevleri</h1>
     <p class="sub">Makine bakım ekibinin görev listesi</p>
-    <label class="f" for="name">Adınız soyadınız</label>
-    <input id="name" class="inp" autocomplete="name" maxlength="80" placeholder="Örn. Ahmet Yılmaz">
-    <div class="seg" role="group" aria-label="Rol">
-      <button type="button" data-role="staff" aria-pressed="true">Personel</button>
-      <button type="button" data-role="manager" aria-pressed="false">Yönetici</button>
+    <div class="seg" role="group" aria-label="Giriş türü">
+      <button type="button" data-mode="in" aria-pressed="true">Giriş yap</button>
+      <button type="button" data-mode="up" aria-pressed="false">İlk kez kayıt ol</button>
     </div>
-    <div id="pinWrap" hidden>
-      <label class="f" for="pin">Yönetici PIN</label>
-      <input id="pin" class="inp" type="password" inputmode="numeric" autocomplete="off">
+    <p class="err" id="lgErr" hidden></p>
+    <label class="f" for="name">Adınız soyadınız</label>
+    <input id="name" class="inp" autocomplete="username" maxlength="80" placeholder="Örn. Ahmet Yılmaz">
+    <label class="f" for="pw1">Şifre</label>
+    <div class="pw"><input id="pw1" class="inp" type="password" autocomplete="current-password" maxlength="64"><button type="button" data-eye="pw1">Göster</button></div>
+    <div id="upOnly" hidden>
+      <label class="f" for="pw2">Şifre tekrar</label>
+      <div class="pw"><input id="pw2" class="inp" type="password" autocomplete="new-password" maxlength="64"><button type="button" data-eye="pw2">Göster</button></div>
+      <label class="f">Rol</label>
+      <div class="seg" role="group" aria-label="Rol">
+        <button type="button" data-role="staff" aria-pressed="true">Personel</button>
+        <button type="button" data-role="manager" aria-pressed="false">Yönetici</button>
+      </div>
+      <div id="pinWrap" hidden>
+        <label class="f" for="pin">Yönetici PIN</label>
+        <input id="pin" class="inp" type="password" inputmode="numeric" autocomplete="off">
+      </div>
     </div>
     <button id="go" class="btn primary">Giriş yap</button>
-    <p class="hint">Adınızı her girişte aynı yazın; görevleriniz bu isimle eşleşir.</p>
+    <p class="hint" id="lgHint">Şifreni unutursan yöneticin sıfırlayabilir.</p>
   </div>
 </section>
 
@@ -228,7 +245,7 @@ body.mgr #toast{bottom:calc(140px + env(safe-area-inset-bottom))}
     <div class="bar">
       <div class="mark"><svg><use href="#chk"/></svg></div>
       <div class="t"><b>Bakım Görevleri</b><span id="hi"></span></div>
-      <button id="out">Çıkış</button>
+      <button id="out">Hesabım</button>
     </div>
     <div class="stats" id="stats">
       <div class="stat"><b id="nLate">0</b><span><i style="background:#ff6b6b"></i>Kırmızı</span></div>
@@ -377,6 +394,32 @@ body.mgr #toast{bottom:calc(140px + env(safe-area-inset-bottom))}
   </div>
 </dialog>
 
+<dialog id="dlgAcc">
+  <div class="sheet">
+    <div class="grip"></div>
+    <h3 id="accName"></h3>
+    <p class="lead" id="accRole"></p>
+    <label class="f">Şifremi değiştir</label>
+    <div class="pw"><input id="accOld" class="inp" type="password" autocomplete="current-password" maxlength="64" placeholder="Şu anki şifre"><button type="button" data-eye="accOld">Göster</button></div>
+    <div class="pw"><input id="accNew" class="inp" type="password" autocomplete="new-password" maxlength="64" placeholder="Yeni şifre (en az 6 karakter)"><button type="button" data-eye="accNew">Göster</button></div>
+    <button id="accSave" class="btn navy">Şifreyi değiştir</button>
+    <button id="accOut" class="btn sec" style="margin-top:10px">Çıkış yap</button>
+    <button class="btn ghost" data-close>Kapat</button>
+  </div>
+</dialog>
+
+<dialog id="dlgReset">
+  <div class="sheet">
+    <div class="grip"></div>
+    <h3>Şifre sıfırla</h3>
+    <p class="lead" id="rsLead"></p>
+    <label class="f" for="rsPw">Yeni şifre</label>
+    <div class="pw"><input id="rsPw" class="inp" type="text" autocomplete="off" maxlength="64" placeholder="En az 6 karakter"><button type="button" data-eye="rsPw">Gizle</button></div>
+    <button id="rsSave" class="btn navy">Şifreyi kaydet</button>
+    <button class="btn ghost" data-close>Vazgeç</button>
+  </div>
+</dialog>
+
 <dialog id="dlgPhoto">
   <div class="sheet">
     <div class="grip"></div>
@@ -393,12 +436,14 @@ body.mgr #toast{bottom:calc(140px + env(safe-area-inset-bottom))}
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { initializeFirestore, getFirestore, persistentLocalCache, persistentMultipleTabManager, collection, doc, getDoc, getDocs, addDoc, setDoc, updateDoc, onSnapshot, query, where, arrayUnion, arrayRemove, serverTimestamp, writeBatch, deleteField } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 import { getMessaging, getToken, isSupported } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-messaging.js";
+import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut as fbSignOut, deleteUser as deleteAuthUser, EmailAuthProvider, reauthenticateWithCredential, updatePassword } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
 /* ---------- Kurulum ---------- */
 const app = initializeApp(CFG.firebase);
 let db;
 try { db = initializeFirestore(app, { localCache: persistentLocalCache({ tabManager: persistentMultipleTabManager() }) }); }
 catch { db = getFirestore(app); }
+const auth = getAuth(app);
 
 const $ = s => document.querySelector(s), $$ = s => [...document.querySelectorAll(s)];
 const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
@@ -417,7 +462,7 @@ const tsDate = ts => ts && ts.toDate ? ts.toDate() : null;
 const fmtTs = ts => { const d = tsDate(ts); return d ? d.toLocaleString("tr-TR", { day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" }) : ""; };
 
 /* ---------- Durum ---------- */
-let me = JSON.parse(localStorage.getItem("me") || "null");
+let me = null;
 let users = [], machines = [], staffTasks = [];
 let openMap = new Map(), doneMap = new Map();
 const extra = new Map();
@@ -433,35 +478,129 @@ function toast(msg, bad) {
 }
 const showErr = e => { console.error(e); toast("İşlem yapılamadı: " + (e?.message || e), true); };
 /* Yazma işlemini bekletmeden yapar; internet yoksa sıraya alınır */
+/* Bildirimler "notify" kutusuna yazılır; GitHub'daki gönderici birkaç dakika içinde telefonlara iletir.
+   İşlemi yapan cihaza gönderilmez, kişinin diğer cihazlarına gider. */
+const fromTok = () => localStorage.getItem("fcmToken") || null;
+const short = (x, n) => { x = String(x || ""); return x.length > n ? x.slice(0, n - 1) + "…" : x; };
+const line = t => `${short(t.title, 120)}${t.machineName ? " · " + short(t.machineName, 40) : ""} (${fmt(t.date)})`;
+function notify(b, to, title, body, tag) {
+  b.set(doc(collection(db, "notify")), { to, title: short(title, 140), body: short(body, 900), tag: tag || "gorev", skip: fromTok(), by: me.id, createdAt: serverTimestamp() });
+}
 function fire(p, msg) { p.catch(showErr); if (msg) toast(navigator.onLine ? msg : msg + " İnternet gelince gönderilecek."); }
 
-/* ---------- Giriş / Çıkış ---------- */
-let role = "staff";
-$$(".seg button").forEach(b => b.onclick = () => {
+/* ---------- Giriş / Kayıt / Çıkış ---------- */
+/* Ad soyad, giriş için gizli bir kullanıcı adına çevrilir (Türkçe harfler sadeleştirilir) */
+const keyOf = n => n.toLocaleLowerCase("tr").replace(/[çğıöşüâîû]/g, c => ({ ç: "c", ğ: "g", ı: "i", ö: "o", ş: "s", ü: "u", â: "a", î: "i", û: "u" }[c]))
+  .normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
+const emailOf = n => keyOf(n) + "@bakim.example";
+const cleanName = () => $("#name").value.trim().replace(/\s+/g, " ");
+function authMsg(e) {
+  const c = e?.code || "";
+  if (/invalid-credential|wrong-password|user-not-found|invalid-email/.test(c)) return "Ad soyad veya şifre yanlış. İlk kez giriyorsan “İlk kez kayıt ol” sekmesini kullan.";
+  if (/email-already-in-use/.test(c)) return "Bu isimle kayıtlı biri var. “Giriş yap” sekmesinden şifrenle gir. Farklı bir kişiysen adının sonuna soyadının baş harfini veya numara ekle.";
+  if (/weak-password/.test(c)) return "Şifre en az 6 karakter olmalı.";
+  if (/too-many-requests/.test(c)) return "Çok fazla hatalı deneme yapıldı. Birkaç dakika sonra tekrar dene.";
+  if (/network-request-failed/.test(c)) return "İnternet bağlantısı yok.";
+  if (/operation-not-allowed|configuration-not-found|admin-restricted/.test(c)) return "Firebase’de şifreli giriş henüz açılmamış (README adım 2).";
+  if (/requires-recent-login/.test(c)) return "Güvenlik için çıkış yapıp tekrar giriş yap, sonra yeniden dene.";
+  return e?.message || String(e);
+}
+const lgErr = m => { $("#lgErr").textContent = m; $("#lgErr").hidden = !m; };
+let mode = "in", role = "staff", registering = false;
+$$(".seg [data-mode]").forEach(b => b.onclick = () => {
+  mode = b.dataset.mode;
+  $$(".seg [data-mode]").forEach(x => x.setAttribute("aria-pressed", x === b));
+  $("#upOnly").hidden = mode !== "up";
+  $("#go").textContent = mode === "up" ? "Kayıt ol" : "Giriş yap";
+  $("#pw1").autocomplete = mode === "up" ? "new-password" : "current-password";
+  $("#lgHint").textContent = mode === "up" ? "Şifren en az 6 karakter olsun ve kimseyle paylaşma." : "Şifreni unutursan yöneticin sıfırlayabilir.";
+  lgErr("");
+});
+$$(".seg [data-role]").forEach(b => b.onclick = () => {
   role = b.dataset.role;
-  $$(".seg button").forEach(x => x.setAttribute("aria-pressed", x === b));
+  $$(".seg [data-role]").forEach(x => x.setAttribute("aria-pressed", x === b));
   $("#pinWrap").hidden = role !== "manager";
 });
+document.addEventListener("click", e => {
+  const b = e.target.closest("[data-eye]"); if (!b) return;
+  const i = document.getElementById(b.dataset.eye), show = i.type === "password";
+  i.type = show ? "text" : "password"; b.textContent = show ? "Gizle" : "Göster";
+});
+$("#name").onkeydown = $("#pw1").onkeydown = $("#pw2").onkeydown = e => { if (e.key === "Enter") $("#go").click(); };
 $("#go").onclick = async () => {
-  const name = $("#name").value.trim().replace(/\s+/g, " ");
-  if (!name) return toast("Adınızı yazın.", true);
-  if (role === "manager" && $("#pin").value !== String(CFG.managerPin)) return toast("PIN yanlış.", true);
-  const id = name.toLocaleLowerCase("tr").replace(/[^\p{L}\p{N}]+/gu, "-").replace(/^-+|-+$/g, "");
-  if (!id) return toast("Adınızı harflerle yazın.", true);
-  if (!navigator.onLine) return toast("İlk giriş için internet gerekli.", true);
+  lgErr("");
+  const name = cleanName(), pw = $("#pw1").value;
+  if (!name) return lgErr("Adını ve soyadını yaz.");
+  if (!keyOf(name)) return lgErr("Adını harflerle yaz.");
+  if (!pw) return lgErr("Şifreni yaz.");
+  if (!navigator.onLine) return lgErr("Giriş için internet gerekli.");
   $("#go").disabled = true;
-  try { await setDoc(doc(db, "users", id), { name, role }, { merge: true }); }
-  catch (e) { $("#go").disabled = false; return toast("Giriş kaydedilemedi: " + e.message, true); }
-  me = { id, name, role }; localStorage.setItem("me", JSON.stringify(me));
-  $("#go").disabled = false; start();
+  try {
+    if (mode === "in") {
+      await signInWithEmailAndPassword(auth, emailOf(name), pw);   // gerisini onAuthStateChanged yapar
+    } else {
+      if (pw.length < 6) throw { code: "weak-password" };
+      if (pw !== $("#pw2").value) throw { message: "Şifreler aynı değil." };
+      if (role === "manager" && $("#pin").value !== String(CFG.managerPin)) throw { message: "Yönetici PIN’i yanlış." };
+      registering = true;
+      const cred = await createUserWithEmailAndPassword(auth, emailOf(name), pw);
+      try {
+        await setDoc(doc(db, "users", cred.user.uid), { name, role, key: keyOf(name), auth: true, createdAt: serverTimestamp() });
+      } catch (e) { await deleteAuthUser(cred.user).catch(() => {}); throw e; }
+      registering = false;
+      await boot(cred.user);
+    }
+  } catch (e) { registering = false; lgErr(authMsg(e)); }
+  $("#go").disabled = false;
 };
-function signOut() {
-  const tok = localStorage.getItem("fcmToken");
-  if (tok && me) updateDoc(doc(db, "users", me.id), { tokens: arrayRemove(tok) }).catch(() => {});
-  localStorage.removeItem("me"); localStorage.removeItem("fcmToken");
-  setTimeout(() => location.reload(), 350);
+async function boot(user) {
+  let prof = null;
+  try {
+    const s = await getDoc(doc(db, "users", user.uid));
+    if (s.exists()) prof = s.data();
+    else if (!s.metadata.fromCache) { await fbSignOut(auth); return showLogin("Hesabın bulunamadı veya silinmiş. Yeniden kayıt olabilirsin."); }
+  } catch { const c = JSON.parse(localStorage.getItem("me") || "null"); if (c && c.id === user.uid) prof = c; }
+  if (!prof) return showLogin("İnternete bağlanıp tekrar dene.");
+  me = { id: user.uid, name: prof.name, role: prof.role };
+  localStorage.setItem("me", JSON.stringify(me));
+  start();
 }
-$("#out").onclick = () => { if (confirm("Çıkış yapılsın mı?")) signOut(); };
+function showLogin(msg) {
+  $("#app").hidden = true; $("#login").hidden = false; lgErr(msg || "");
+  $("#pw1").value = ""; $("#pw2").value = ""; $("#pin").value = "";
+}
+onAuthStateChanged(auth, user => {
+  if (registering) return;
+  if (!user) { if (started) location.reload(); else showLogin(); return; }
+  if (!started) boot(user);
+});
+async function signOut() {
+  const tok = localStorage.getItem("fcmToken");
+  if (tok && me) await Promise.race([updateDoc(doc(db, "users", me.id), { tokens: arrayRemove(tok) }).catch(() => {}), new Promise(r => setTimeout(r, 1500))]);
+  localStorage.removeItem("me"); localStorage.removeItem("fcmToken");
+  await fbSignOut(auth).catch(() => {});
+  location.reload();
+}
+/* Hesabım */
+$("#out").onclick = () => {
+  $("#accName").textContent = me.name; $("#accRole").textContent = isMgr() ? "Yönetici" : "Personel";
+  $("#accOld").value = ""; $("#accNew").value = "";
+  $("#dlgAcc").showModal();
+};
+$("#accOut").onclick = () => { if (confirm("Çıkış yapılsın mı?")) signOut(); };
+$("#accSave").onclick = async () => {
+  const old = $("#accOld").value, nw = $("#accNew").value;
+  if (!old || !nw) return toast("Şu anki ve yeni şifreyi yaz.", true);
+  if (nw.length < 6) return toast("Yeni şifre en az 6 karakter olmalı.", true);
+  $("#accSave").disabled = true;
+  try {
+    const u = auth.currentUser;
+    await reauthenticateWithCredential(u, EmailAuthProvider.credential(u.email, old));
+    await updatePassword(u, nw);
+    $("#dlgAcc").close(); toast("Şifren değiştirildi.");
+  } catch (e) { toast(/invalid-credential|wrong-password/.test(e.code || "") ? "Şu anki şifre yanlış." : authMsg(e), true); }
+  $("#accSave").disabled = false;
+};
 
 /* ---------- Bildirimler ---------- */
 if ("serviceWorker" in navigator) navigator.serviceWorker.register("firebase-messaging-sw.js").then(r => swReg = r).catch(() => {});
@@ -558,7 +697,7 @@ function renderTasks() {
   $("#cBlock").textContent = blocked.length || "";
   $("#cDone").textContent = done.length || "";
   if (mgr) {
-    const chips = [["all", "Herkes"], ["me", "Ben"], ...users.filter(u => u.id !== me.id).map(u => [u.id, u.name])];
+    const chips = [["all", "Herkes"], ["me", "Ben"], ...users.filter(u => u.id !== me.id && u.auth).map(u => [u.id, u.name])];
     $("#whoFilter").hidden = false;
     $("#whoFilter").innerHTML = chips.map(([v, n]) => `<button type="button" class="chip" data-fw="${esc(v)}" aria-pressed="${fWho === v}">${esc(n)}</button>`).join("");
   }
@@ -609,12 +748,18 @@ function act(a, id) {
     $("#dlgDone").showModal();
   }
   if (a === "block") { curId = id; $("#bTitle").textContent = t.title; $("#bNote").value = ""; $("#bSave").disabled = true; $("#dlgBlock").showModal(); }
-  if (a === "flag") { const hi = t.priority !== "high"; fire(updateDoc(ref, { priority: hi ? "high" : "normal", ...by }), hi ? "Görev kırmızı işaretlendi." : "Kırmızı işaret kaldırıldı."); }
+  if (a === "flag") {
+    const hi = t.priority !== "high", b = writeBatch(db);
+    b.update(ref, { priority: hi ? "high" : "normal", ...by });
+    if (hi) notify(b, t.assigneeId, "🔴 Görev acil olarak işaretlendi", line(t), id);
+    fire(b.commit(), hi ? "Görev kırmızı işaretlendi." : "Kırmızı işaret kaldırıldı.");
+  }
   if (a === "reopen" && confirm("Görev tekrar açılsın mı?")) {
     const b = writeBatch(db);
     b.update(ref, { status: "open", doneNote: deleteField(), doneAt: deleteField(), doneDay: deleteField(), doneById: deleteField(), doneByName: deleteField(),
       blockedReason: deleteField(), blockedAt: deleteField(), blockedById: deleteField(), blockedByName: deleteField(), hasPhoto: false, ...by });
     b.delete(doc(db, "photos", id));
+    notify(b, t.assigneeId, "Görev tekrar açıldı", line(t), id);
     fire(b.commit(), "Görev tekrar açıldı.");
   }
   if (a === "edit") openTaskSheet("edit", t);
@@ -655,6 +800,8 @@ $("#dSave").onclick = () => {
   b.update(doc(db, "tasks", curId), { status: "done", doneNote: note, doneAt: serverTimestamp(), doneDay: today(), doneById: me.id, doneByName: me.name,
     hasPhoto: !!photoData, blockedReason: deleteField(), updatedBy: me.id });
   if (photoData) b.set(doc(db, "photos", curId), { data: photoData, at: serverTimestamp() });
+  const t = findTask(curId);
+  if (t) notify(b, "managers", `✔ ${me.name} görevi tamamladı`, `${short(t.title, 120)}\n${short(note, 300)}`, "bitti-" + curId);
   fire(b.commit(), "Görev tamamlandı olarak kaydedildi.");
   $("#dlgDone").close();
 };
@@ -662,7 +809,10 @@ $("#dSave").onclick = () => {
 $("#bNote").oninput = e => $("#bSave").disabled = !e.target.value.trim();
 $("#bSave").onclick = () => {
   const r = $("#bNote").value.trim(); if (!r || !curId) return;
-  fire(updateDoc(doc(db, "tasks", curId), { status: "blocked", blockedReason: r, blockedAt: serverTimestamp(), blockedById: me.id, blockedByName: me.name, updatedBy: me.id }), "Yöneticiye bildirildi.");
+  const b = writeBatch(db), t = findTask(curId);
+  b.update(doc(db, "tasks", curId), { status: "blocked", blockedReason: r, blockedAt: serverTimestamp(), blockedById: me.id, blockedByName: me.name, updatedBy: me.id });
+  if (t) notify(b, "managers", `⚠ ${me.name}: görev yapılamadı`, `${short(t.title, 120)}\nSebep: ${short(r, 300)}`, "sorun-" + curId);
+  fire(b.commit(), "Yöneticiye bildirildi.");
   $("#dlgBlock").close();
 };
 /* Fotoğraf göster */
@@ -679,9 +829,9 @@ async function showPhoto(id) {
 /* ---------- Görev paneli (yeni / düzenle) ---------- */
 const S = {};
 function openTaskSheet(mode, src = {}) {
-  Object.assign(S, { mode, id: src.id || null, who: src.assigneeId || null, machine: src.machineId || "",
+  Object.assign(S, { mode, orig: src, id: src.id || null, who: src.assigneeId || null, machine: src.machineId || "",
     prio: src.priority || "normal" });
-  if (S.who && !users.some(u => u.id === S.who)) S.who = null;
+  if (S.who && !users.some(u => u.id === S.who && u.auth)) S.who = null;
   if (S.machine && !machines.some(m => m.id === S.machine)) S.machine = "";
   $("#tTitle").value = src.title || "";
   const d = src.date || today();
@@ -700,7 +850,7 @@ function drawSheet() {
   $("#tH").textContent = S.mode === "edit" ? "Görevi düzenle" : "Yeni görev";
   $("#tLead").textContent = S.mode === "edit" ? "Kişi veya tarih değişirse ilgili kişiye bildirim gider." : "Seçtiğin kişiye hemen bildirim gider.";
   $("#tSave").textContent = S.mode === "edit" ? "Değişiklikleri kaydet" : "Görevi gönder";
-  const ordered = [...users.filter(u => u.id === me.id), ...users.filter(u => u.id !== me.id)];
+  const active = users.filter(u => u.auth), ordered = [...active.filter(u => u.id === me.id), ...active.filter(u => u.id !== me.id)];
   $("#tWho").innerHTML = ordered.length ? ordered.map(u => `<button type="button" class="chip" data-who="${esc(u.id)}" aria-pressed="${u.id === S.who}">${u.id === me.id ? "Ben" : esc(u.name)}</button>`).join("")
     : `<p class="none">Kişi listesi yükleniyor…</p>`;
   $$("#tDate .chip").forEach(c => c.setAttribute("aria-pressed", c.dataset.d === S.dateKey));
@@ -718,10 +868,19 @@ $("#tSave").onclick = () => {
   if (!title) return toast("Görevi yaz.", true);
   const mc = machines.find(m => m.id === S.machine);
   const base = { title, assigneeId: u.id, assigneeName: u.name, priority: S.prio, machineId: mc ? mc.id : null, machineName: mc ? mc.name : null, updatedBy: me.id };
+  const b = writeBatch(db), next = { ...base, date };
   if (S.mode === "edit") {
-    fire(updateDoc(doc(db, "tasks", S.id), { ...base, date }), "Görev güncellendi.");
+    const o = S.orig || {};
+    b.update(doc(db, "tasks", S.id), next);
+    if (o.assigneeId !== u.id) notify(b, u.id, S.prio === "high" ? "🔴 Acil yeni görev" : "Yeni görev", line(next), S.id);
+    else if (o.date !== date) notify(b, u.id, "Görev tarihi değişti", line(next), S.id);
+    else if (o.priority !== "high" && S.prio === "high") notify(b, u.id, "🔴 Görev acil olarak işaretlendi", line(next), S.id);
+    fire(b.commit(), "Görev güncellendi.");
   } else {
-    fire(addDoc(collection(db, "tasks"), { ...base, date, status: "open", createdAt: serverTimestamp(), createdBy: me.id }), `Görev gönderildi: ${u.id === me.id ? "kendine" : u.name}`);
+    const ref = doc(collection(db, "tasks"));
+    b.set(ref, { ...next, status: "open", createdAt: serverTimestamp(), createdBy: me.id });
+    notify(b, u.id, S.prio === "high" ? "🔴 Acil yeni görev" : "Yeni görev", line(next), ref.id);
+    fire(b.commit(), u.id === me.id ? "Görev kendine yazıldı. Bildirim diğer cihazlarına gider." : `Görev gönderildi: ${u.name}`);
   }
   $("#dlgTask").close();
 };
@@ -790,13 +949,28 @@ function renderTeam() {
   const tasks = allTasks();
   $("#teamList").innerHTML = users.map(u => {
     const open = tasks.filter(t => t.assigneeId === u.id && t.status !== "done"), red = open.filter(t => t.status === "open" && info(t).red).length;
-    return `<div class="item"><b>${esc(u.name)}${u.id === me.id ? " (sen)" : ""}</b>
-      <small>${u.role === "manager" ? "Yönetici" : "Personel"}${u.tokens && u.tokens.length ? " · Bildirim açık" : " · Bildirim kapalı"}</small>
-      <div class="row"><span class="pill">${open.length} açık görev</span>${red ? `<span class="pill hot">${red} kırmızı</span>` : ""}</div>
-      ${u.id !== me.id ? `<div class="links"><button class="lnk danger" data-deluser="${esc(u.id)}">Kişiyi sil</button></div>` : ""}</div>`;
-  }).join("") || `<div class="empty"><b>Kimse yok</b>Adresi paylaş; giriş yapan kişiler burada görünür.</div>`;
+    const legacy = !u.auth;
+    return `<div class="item ${legacy ? "off" : ""}"><b>${esc(u.name)}${u.id === me.id ? " (sen)" : ""}</b>
+      <small>${legacy ? "Eski şifresiz kayıt · kişinin yeniden kayıt olması gerekiyor" : (u.role === "manager" ? "Yönetici" : "Personel") + (u.tokens && u.tokens.length ? " · Bildirim açık" : " · Bildirim kapalı")}</small>
+      <div class="row"><span class="pill">${open.length} açık görev</span>${red ? `<span class="pill hot">${red} kırmızı</span>` : ""}${ops.some(o => o.uid === u.id && o.type === "reset" && !o.error) ? `<span class="pill">⏳ Şifre sıfırlanıyor</span>` : ""}</div>
+      ${u.id !== me.id ? `<div class="links">${legacy ? "" : `<button class="lnk" data-reset="${esc(u.id)}">Şifre sıfırla</button>`}<button class="lnk danger" data-deluser="${esc(u.id)}">Kişiyi sil</button></div>` : ""}</div>`;
+  }).join("") || `<div class="empty"><b>Kimse yok</b>Adresi paylaş; kayıt olan kişiler burada görünür.</div>`;
+  $("#teamList").insertAdjacentHTML("afterbegin", opsHtml());
+}
+let resetId = null, ops = [];
+function opsHtml() {
+  const mine = ops.filter(o => !users.some(u => u.id === o.uid) || o.error);
+  return mine.map(o => `<div class="notice"><p><b>${o.error ? "⚠ İşlem yapılamadı" : "⏳ İşlem sırada"}</b>${o.type === "reset" ? "Şifre sıfırlama" : "Hesap silme"}${o.name ? " · " + esc(o.name) : ""}${o.error ? " · " + esc(o.error) : " · birkaç dakika içinde tamamlanır"}</p>${o.error ? `<button data-opok="${esc(o.id)}">Tamam</button>` : ""}</div>`).join("");
 }
 $("#teamList").onclick = async e => {
+  const ok = e.target.closest("[data-opok]");
+  if (ok) { fire(writeBatch(db).delete(doc(db, "adminOps", ok.dataset.opok)).commit()); return; }
+  const rs = e.target.closest("[data-reset]");
+  if (rs) {
+    const u = users.find(x => x.id === rs.dataset.reset); if (!u) return;
+    resetId = u.id; $("#rsLead").textContent = `${u.name} için yeni şifre belirle ve kişiye söyle. Kişi giriş yaptıktan sonra Hesabım’dan kendi şifresini koyabilir.`;
+    $("#rsPw").value = ""; $("#dlgReset").showModal(); return;
+  }
   const b = e.target.closest("[data-deluser]"); if (!b) return;
   const u = users.find(x => x.id === b.dataset.deluser); if (!u) return;
   const nOpen = [...openMap.values()].filter(t => t.assigneeId === u.id).length;
@@ -806,8 +980,21 @@ $("#teamList").onclick = async e => {
     const bt = writeBatch(db);
     bt.delete(doc(db, "users", u.id));
     ts.docs.filter(d => d.data().status !== "done").forEach(d => { bt.delete(d.ref); bt.delete(doc(db, "photos", d.id)); });
-    await bt.commit(); toast(`${u.name} silindi.`);
+    if (u.auth) bt.set(doc(collection(db, "adminOps")), { type: "deleteAuth", uid: u.id, name: u.name, by: me.id, createdAt: serverTimestamp() });
+    await bt.commit();
+    toast(`${u.name} silindi.`);
   } catch (err) { showErr(err); }
+};
+$("#rsSave").onclick = async () => {
+  const pw = $("#rsPw").value.trim();
+  if (pw.length < 6) return toast("Şifre en az 6 karakter olmalı.", true);
+  $("#rsSave").disabled = true;
+  const u = users.find(x => x.id === resetId);
+  try {
+    await addDoc(collection(db, "adminOps"), { type: "reset", uid: resetId, name: u ? u.name : "", password: pw, by: me.id, createdAt: serverTimestamp() });
+    $("#dlgReset").close(); toast("Şifre birkaç dakika içinde değişecek. Yeni şifreyi kişiye söyle.");
+  } catch (e) { showErr(e); }
+  $("#rsSave").disabled = false;
 };
 $("#invite").onclick = async () => {
   const url = location.origin + location.pathname;
@@ -917,19 +1104,20 @@ function start() {
       if (view === "report") fillReportWho();
       render();
     }, showErr);
+    onSnapshot(collection(db, "adminOps"), s => { ops = s.docs.map(d => ({ id: d.id, ...d.data() })); if (view === "team") renderTeam(); }, () => {});
     onSnapshot(collection(db, "machines"), s => { machines = s.docs.map(d => ({ id: d.id, ...d.data() })).sort((a, b) => a.name.localeCompare(b.name, "tr")); render(); }, showErr);
   } else {
     onSnapshot(query(tasksCol, where("assigneeId", "==", me.id)), s => { staffTasks = s.docs.map(d => ({ id: d.id, ...d.data() })); render(); }, showErr);
   }
   /* Kişi silinirse bu cihaz çıkış yapar */
   onSnapshot(doc(db, "users", me.id), s => {
-    if (!s.exists() && !s.metadata.fromCache) { localStorage.removeItem("me"); localStorage.removeItem("fcmToken"); alert("Hesabınız yönetici tarafından kaldırıldı. Tekrar giriş yapabilirsiniz."); location.reload(); }
+    if (!s.exists() && !s.metadata.fromCache) { localStorage.removeItem("me"); localStorage.removeItem("fcmToken"); alert("Hesabınız yönetici tarafından kaldırıldı."); fbSignOut(auth).finally(() => location.reload()); }
   });
   notifState();
   setInterval(() => { if (today() !== lastDay) { lastDay = today(); render(); } }, 60000);
   document.addEventListener("visibilitychange", () => { if (!document.hidden) { lastDay = today(); render(); } });
   render();
 }
-if (me) start(); else $("#login").hidden = false;
+/* Açılış: oturum durumu onAuthStateChanged ile kontrol edilir */
 </script>
 </body></html>

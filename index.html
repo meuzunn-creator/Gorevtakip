@@ -198,6 +198,7 @@ textarea.inp{resize:vertical;min-height:100px}
 .sheet .acts3{display:flex;gap:4px;flex-wrap:wrap;margin:-6px 0 12px}
 .pick{display:flex;align-items:center;justify-content:center;gap:8px;border:2px dashed var(--line);border-radius:12px;min-height:56px;margin:0 0 12px;font-weight:600;color:var(--mut);cursor:pointer}
 #phPrev{display:block;max-width:100%;max-height:220px;border-radius:10px;margin:0 auto 4px}
+#diag{white-space:pre-wrap;font:14px/1.5 ui-monospace,Menlo,Consolas,monospace;background:var(--tint);border-radius:10px;padding:10px 12px;margin:0 0 12px;overflow-wrap:anywhere}
 #phImg{display:block;max-width:100%;max-height:70vh;margin:0 auto 12px;border-radius:10px}
 
 #toast{position:fixed;left:50%;bottom:calc(24px + env(safe-area-inset-bottom));transform:translateX(-50%);z-index:30;
@@ -403,6 +404,8 @@ body.mgr #toast{bottom:calc(140px + env(safe-area-inset-bottom))}
     <div class="pw"><input id="accOld" class="inp" type="password" autocomplete="current-password" maxlength="64" placeholder="Şu anki şifre"><button type="button" data-eye="accOld">Göster</button></div>
     <div class="pw"><input id="accNew" class="inp" type="password" autocomplete="new-password" maxlength="64" placeholder="Yeni şifre (en az 6 karakter)"><button type="button" data-eye="accNew">Göster</button></div>
     <button id="accSave" class="btn navy">Şifreyi değiştir</button>
+    <button id="accTest" class="btn sec" style="margin-top:10px">Bildirimleri test et</button>
+    <pre id="diag" hidden></pre>
     <button id="accOut" class="btn sec" style="margin-top:10px">Çıkış yap</button>
     <button class="btn ghost" data-close>Kapat</button>
   </div>
@@ -434,7 +437,7 @@ body.mgr #toast{bottom:calc(140px + env(safe-area-inset-bottom))}
 <script src="config.js"></script>
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import { initializeFirestore, getFirestore, persistentLocalCache, persistentMultipleTabManager, collection, doc, getDoc, getDocs, addDoc, setDoc, updateDoc, onSnapshot, query, where, arrayUnion, arrayRemove, serverTimestamp, writeBatch, deleteField } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import { initializeFirestore, getFirestore, persistentLocalCache, persistentMultipleTabManager, collection, doc, getDoc, getDocFromServer, getDocs, addDoc, setDoc, updateDoc, onSnapshot, query, where, arrayUnion, arrayRemove, serverTimestamp, writeBatch, deleteField } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 import { getMessaging, getToken, isSupported } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-messaging.js";
 import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut as fbSignOut, deleteUser as deleteAuthUser, EmailAuthProvider, reauthenticateWithCredential, updatePassword } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
@@ -584,8 +587,45 @@ async function signOut() {
 /* Hesabım */
 $("#out").onclick = () => {
   $("#accName").textContent = me.name; $("#accRole").textContent = isMgr() ? "Yönetici" : "Personel";
-  $("#accOld").value = ""; $("#accNew").value = "";
+  $("#accOld").value = ""; $("#accNew").value = ""; $("#diag").hidden = true;
   $("#dlgAcc").showModal();
+};
+/* Bildirim testi: her adımı kontrol edip sonucu ekrana yazar */
+$("#accTest").onclick = async () => {
+  const out = [], add = (ok, t) => { out.push(`${ok ? "✔" : "✖"} ${t}`); $("#diag").textContent = out.join("\n"); };
+  $("#diag").hidden = false; $("#accTest").disabled = true;
+  try {
+    out.push("Cihaz: " + navigator.userAgent.replace(/^Mozilla\/5\.0 /, "").slice(0, 140));
+    add(matchMedia("(display-mode: standalone)").matches, "Ana ekran simgesinden açıldı");
+    if (!("Notification" in window)) return add(false, "Bu tarayıcı bildirim desteklemiyor. Chrome ile açıp ana ekrana ekleyin.");
+    if (Notification.permission === "default") await Notification.requestPermission();
+    add(Notification.permission === "granted", "Bildirim izni: " + ({ granted: "verildi", denied: "ENGELLENDİ (telefon ayarlarından açın)", default: "sorulmadı / cevaplanmadı" }[Notification.permission]));
+    if (Notification.permission !== "granted") return;
+    let sup = false; try { sup = await isSupported(); } catch {}
+    add(sup, "Push bildirim desteği");
+    let reg;
+    try { reg = swReg || await navigator.serviceWorker.register("firebase-messaging-sw.js"); await navigator.serviceWorker.ready; add(true, "Arka plan servisi çalışıyor"); }
+    catch (e) { return add(false, "Arka plan servisi: " + e.message); }
+    try { await reg.showNotification("Test bildirimi", { body: "Bunu görüyorsan telefon bildirim gösterebiliyor.", icon: "icons/icon-192.png", tag: "test" }); add(true, "Yerel test bildirimi gönderildi (şimdi ekranda görmelisin)"); }
+    catch (e) { add(false, "Yerel test bildirimi: " + e.message); }
+    if (!sup) return;
+    let token;
+    try { token = await getToken(getMessaging(app), { vapidKey: CFG.vapidKey, serviceWorkerRegistration: reg }); add(!!token, "Bildirim anahtarı alındı"); }
+    catch (e) { return add(false, "Bildirim anahtarı alınamadı: " + e.message); }
+    try {
+      await setDoc(doc(db, "users", me.id), { tokens: arrayUnion(token) }, { merge: true });
+      localStorage.setItem("fcmToken", token);
+      const s = await getDocFromServer(doc(db, "users", me.id));
+      add((s.data()?.tokens || []).includes(token), "Anahtar hesaba kaydedildi");
+    } catch (e) { return add(false, "Anahtar kaydedilemedi: " + e.message); }
+    try {
+      const b = writeBatch(db);
+      b.set(doc(collection(db, "notify")), { to: me.id, title: "Sunucu testi", body: "Bu bildirim GitHub üzerinden geldi. Her şey çalışıyor.", tag: "test", skip: null, by: me.id, createdAt: serverTimestamp() });
+      await b.commit();
+      add(true, "Sunucu testi sıraya alındı: gönderici bir sonraki çalışmada bu telefona “Sunucu testi” bildirimi yollar");
+    } catch (e) { add(false, "Sunucu testi sıraya alınamadı: " + e.message); }
+    $("#bell").hidden = true;
+  } finally { $("#accTest").disabled = false; }
 };
 $("#accOut").onclick = () => { if (confirm("Çıkış yapılsın mı?")) signOut(); };
 $("#accSave").onclick = async () => {
